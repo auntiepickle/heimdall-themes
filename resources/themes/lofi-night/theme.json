@@ -1,7 +1,7 @@
 {
     "name": "Lofi Night",
     "slug": "lofi-night",
-    "author": "piekel",
+    "author": "auntiepickle",
     "description": "Deep blue nebula, fireflies, CRT grain, per-scene clocks, weather",
     "preview": "preview.jpg",
     "variants": ["day", "evening", "night"],
