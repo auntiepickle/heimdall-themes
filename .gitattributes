@@ -7,6 +7,11 @@
 # Line Endings
 * text=auto
 
+# Docker build artifacts — must stay LF even on Windows checkouts
+docker/** text eol=lf
+docker-compose*.yml text eol=lf
+Dockerfile text eol=lf
+
 # Set binary to none-text files
 *.png -text
 

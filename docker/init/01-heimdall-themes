@@ -1,0 +1,25 @@
+#!/usr/bin/with-contenv bash
+# Runs on every container start. Idempotent.
+# - clears Laravel caches so our overlay takes effect
+# - runs pending migrations (adds theme_mode / theme_name columns if not present)
+set -e
+
+APP=/app/www
+cd "$APP"
+
+# Wait for /config/www/app.sqlite to exist (linuxserver copies it on first run)
+for i in $(seq 1 30); do
+    [ -f /config/www/app.sqlite ] && break
+    sleep 1
+done
+
+if [ -f /config/www/app.sqlite ]; then
+    s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
+        echo "[heimdall-themes] migrate failed (non-fatal, column may already exist)"
+    s6-setuidgid abc php artisan config:clear 2>&1 || true
+    s6-setuidgid abc php artisan route:clear  2>&1 || true
+    s6-setuidgid abc php artisan view:clear   2>&1 || true
+    echo "[heimdall-themes] init complete"
+else
+    echo "[heimdall-themes] WARNING: /config/www/app.sqlite not found after 30s, skipping migrate"
+fi
