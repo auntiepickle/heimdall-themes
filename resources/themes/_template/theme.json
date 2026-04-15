@@ -1,0 +1,8 @@
+{
+    "name": "My Theme",
+    "slug": "my-theme",
+    "author": "your-github-username",
+    "description": "Describe your theme here.",
+    "variants": ["default"],
+    "auto_schedule": {}
+}

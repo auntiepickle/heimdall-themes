@@ -1,0 +1,13 @@
+{
+    "name": "Lofi Night",
+    "slug": "lofi-night",
+    "author": "piekel",
+    "description": "Deep blue nebula, fireflies, CRT grain, per-scene clocks, weather",
+    "preview": "preview.jpg",
+    "variants": ["day", "evening", "night"],
+    "auto_schedule": {
+        "day":     { "from": 6,  "to": 17 },
+        "evening": { "from": 17, "to": 20 },
+        "night":   { "from": 20, "to": 6  }
+    }
+}

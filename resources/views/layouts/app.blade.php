@@ -37,7 +37,21 @@
         /* editable using the 'Settings > Advanced > Custom CSS' option */
         {!! \App\Setting::fetch('custom_css') !!}
         </style>
-    </head>
+    
+    {{-- THEMES --}}
+    @php
+        use App\Models\Theme;
+        $ts=\App\Models\Setting::first();
+        $activeTheme=($ts->theme_name??null)?Theme::find($ts->theme_name??''):null;
+        $themeMode=$ts->theme_mode??'auto';
+    @endphp
+    @if($activeTheme)
+    <link rel="stylesheet" href="{{$activeTheme->cssUrl()}}">
+    <script>window.__HEIMDALL_THEME__={slug:"{{$activeTheme->slug}}",mode:"{{$themeMode}}",variant:"{{$activeTheme->currentVariant()}}",multiVariant:{{$activeTheme->isMultiVariant()?'true':'false'}}};</script>
+    @if($activeTheme->hasJs())<script defer src="{{$activeTheme->jsUrl()}}"></script>@endif
+    @endif
+    {{-- END THEMES --}}
+</head>
     <body>
         <div id="app"{!! $alt_bg !!}>
             <nav class="sidenav">

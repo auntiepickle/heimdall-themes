@@ -1,0 +1,2 @@
+/* Override Heimdall styles here */
+div.item { background:rgba(255,255,255,0.75)!important; border-radius:20px!important; }
