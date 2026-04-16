@@ -3,7 +3,7 @@
     "slug": "lofi-night",
     "author": "auntiepickle",
     "description": "Deep blue nebula, fireflies, CRT grain, per-scene clocks, weather",
-    "preview": "preview.jpg",
+    "preview": null,
     "variants": ["day", "evening", "night"],
     "auto_schedule": {
         "day":     { "from": 6,  "to": 17 },

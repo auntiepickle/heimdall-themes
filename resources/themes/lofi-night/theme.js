@@ -156,17 +156,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (theme === 'night') {
             atmoCanvas.dataset.baseOpacity   = '0.30';
             atmoCanvas.style.mixBlendMode    = 'screen';
-            glitchCanvas.dataset.baseOpacity = '0.22';
+            glitchCanvas.dataset.baseOpacity = '0.38';
             glitchCanvas.style.mixBlendMode  = 'overlay';
         } else if (theme === 'evening') {
             atmoCanvas.dataset.baseOpacity   = '0.28';
             atmoCanvas.style.mixBlendMode    = 'overlay';
-            glitchCanvas.dataset.baseOpacity = '0.20';
+            glitchCanvas.dataset.baseOpacity = '0.34';
             glitchCanvas.style.mixBlendMode  = 'soft-light';
         } else {
             atmoCanvas.dataset.baseOpacity   = '0.25';
             atmoCanvas.style.mixBlendMode    = 'overlay';
-            glitchCanvas.dataset.baseOpacity = '0.18';
+            glitchCanvas.dataset.baseOpacity = '0.30';
             glitchCanvas.style.mixBlendMode  = 'soft-light';
         }
     }
@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             float t=u_time;
             bool isNight = u_theme > 1.5;
 
-            float grainAmt    = isNight ? 0.58 : 0.48;
+            float grainAmt    = isNight ? 0.82 : 0.70;
             float scanAmt     = isNight ? 0.10 : 0.07;
             float aberrBase   = isNight ? 0.008 : 0.005;
             float glitchThresh= isNight ? 0.91 : 0.94;
