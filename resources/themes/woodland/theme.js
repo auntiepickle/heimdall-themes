@@ -123,8 +123,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
+                // Retrowave pink flashes. Rare, brief, organic.
+                float pinkFlash=0.;
+                float flashPhase=floor(t*0.2);
+                if(hash(vec2(flashPhase,3.7))>0.7){
+                    float age=fract(t*0.2);
+                    float burst=exp(-age*4.)*0.15;
+                    vec2 center=vec2(hash(vec2(flashPhase,1.2)),hash(vec2(flashPhase,5.8)));
+                    float dist=length(uv-center);
+                    pinkFlash=burst*smoothstep(0.4,0.,dist);
+                }
+                vec3 pinkCol=vec3(0.95,0.2,0.6)*pinkFlash;
+
                 // Compose
-                vec3 color=sky+fogAll+moss+rayCol*rays+warmCol*warmth;
+                vec3 color=sky+fogAll+moss+rayCol*rays+warmCol*warmth+pinkCol;
                 color-=vec3(trees)*0.5;
                 color-=vec3(canopy)*0.3;
                 if(u_theme>1.5) color+=vec3(0.45,0.75,0.25)*fireflies;
@@ -189,6 +201,16 @@ document.addEventListener('DOMContentLoaded', () => {
             wanderAngle:Math.random()*Math.PI*2,wanderSpeed:Math.random()*0.01+0.003,
             trail:[],trailMax:Math.floor(Math.random()*8+4)};
     }
+    function spawnFaerie(w,h){
+        const colors=['rgba(255,180,220,','rgba(200,150,255,','rgba(180,255,200,','rgba(255,220,150,'];
+        return{type:'faerie',x:Math.random()*w,y:Math.random()*h*0.6+h*0.1,
+            size:Math.random()*2+1.5,vx:Math.random()*0.2-0.1,vy:Math.random()*0.15-0.1,
+            pulse:Math.random()*Math.PI*2,pulseSpeed:Math.random()*0.06+0.03,
+            wanderAngle:Math.random()*Math.PI*2,wanderSpeed:Math.random()*0.015+0.005,
+            trail:[],trailMax:Math.floor(Math.random()*15+8),
+            color:colors[Math.floor(Math.random()*colors.length)],
+            sparkle:Math.random()*Math.PI*2};
+    }
     function spawnEmber(w,h){
         return{type:'ember',x:Math.random()*w,y:h+10,
             size:Math.random()*3+1.5,speedX:Math.random()*0.4-0.2,speedY:-(Math.random()*0.5+0.2),
@@ -201,11 +223,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if(theme==='day'){
             for(let i=0;i<25;i++) particles.push(spawnPollen(w,h));
             for(let i=0;i<15;i++){const p=spawnLeaf(w,h);p.y=Math.random()*h;particles.push(p);}
+            for(let i=0;i<8;i++) particles.push(spawnFaerie(w,h));
         }else if(theme==='evening'){
             for(let i=0;i<15;i++) particles.push(spawnPollen(w,h));
             for(let i=0;i<20;i++){const p=spawnEmber(w,h);p.y=Math.random()*h;p.life=Math.random();particles.push(p);}
+            for(let i=0;i<12;i++) particles.push(spawnFaerie(w,h));
         }else{
-            for(let i=0;i<30;i++) particles.push(spawnFirefly(w,h));
+            for(let i=0;i<25;i++) particles.push(spawnFirefly(w,h));
+            for(let i=0;i<20;i++) particles.push(spawnFaerie(w,h));
             for(let i=0;i<10;i++) particles.push(spawnPollen(w,h));
         }
     }
@@ -255,6 +280,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.shadowBlur=8*pulse;ctx.shadowColor='#b4dc50';
                 ctx.beginPath();ctx.arc(p.x,p.y,p.size*pulse,0,Math.PI*2);
                 ctx.fillStyle=`rgba(220,250,120,${0.6*pulse+0.1})`;ctx.fill();
+                ctx.shadowBlur=0;
+            }else if(p.type==='faerie'){
+                p.pulse+=p.pulseSpeed;
+                p.sparkle+=0.15;
+                const glow=Math.sin(p.pulse)*0.4+0.6;
+                const sparkle=Math.sin(p.sparkle)*0.5+0.5;
+                p.wanderAngle+=p.wanderSpeed*(Math.random()-0.5)*2;
+                p.vx+=Math.cos(p.wanderAngle)*0.004;
+                p.vy+=Math.sin(p.wanderAngle)*0.004-0.002;
+                const spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+                if(spd>0.2){p.vx*=0.2/spd;p.vy*=0.2/spd;}
+                p.vx*=0.99;p.vy*=0.99;
+                p.trail.push({x:p.x,y:p.y});if(p.trail.length>p.trailMax)p.trail.shift();
+                p.x+=p.vx;p.y+=p.vy;
+                p.x=Math.max(30,Math.min(w-30,p.x));p.y=Math.max(30,Math.min(h-30,p.y));
+                // Trail with sparkle
+                if(p.trail.length>1){
+                    ctx.beginPath();ctx.moveTo(p.trail[0].x,p.trail[0].y);
+                    for(let j=1;j<p.trail.length;j++)ctx.lineTo(p.trail[j].x,p.trail[j].y);
+                    ctx.strokeStyle=p.color+(0.1*glow)+')';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+                }
+                // Outer shimmer
+                ctx.beginPath();ctx.arc(p.x,p.y,p.size*4*glow,0,Math.PI*2);
+                ctx.fillStyle=p.color+(0.03*glow)+')';ctx.fill();
+                // Inner glow
+                ctx.shadowBlur=12*glow;ctx.shadowColor=p.color+'0.6)';
+                ctx.beginPath();ctx.arc(p.x,p.y,p.size*glow,0,Math.PI*2);
+                ctx.fillStyle=p.color+(0.7*glow)+')';ctx.fill();
+                // Sparkle cross
+                if(sparkle>0.7){
+                    const sl=p.size*3*sparkle;
+                    ctx.beginPath();ctx.moveTo(p.x-sl,p.y);ctx.lineTo(p.x+sl,p.y);
+                    ctx.moveTo(p.x,p.y-sl);ctx.lineTo(p.x,p.y+sl);
+                    ctx.strokeStyle=p.color+(0.3*sparkle)+')';ctx.lineWidth=0.5;ctx.stroke();
+                }
                 ctx.shadowBlur=0;
             }else if(p.type==='ember'){
                 const flicker=Math.sin(Date.now()/200+p.opacity*10)*0.2+0.8;

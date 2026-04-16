@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             float t=u_time;
             bool isNight = u_theme > 1.5;
 
-            float grainAmt    = isNight ? 0.82 : 0.70;
+            float grainAmt    = isNight ? 1.15 : 0.98;
             float scanAmt     = isNight ? 0.10 : 0.07;
             float aberrBase   = isNight ? 0.008 : 0.005;
             float glitchThresh= isNight ? 0.91 : 0.94;
