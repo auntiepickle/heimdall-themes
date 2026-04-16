@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clockContainer.id='clock-container';
     clockContainer.style.display=isHomePage?'block':'none';
     const clockCanvas=document.createElement('canvas');
-    clockCanvas.width=72;clockCanvas.height=72;
+    clockCanvas.width=76;clockCanvas.height=76;
     clockContainer.appendChild(clockCanvas);
     document.body.appendChild(clockContainer);
     clockContainer.addEventListener('click',()=>{window.location.href='/';});
@@ -340,18 +340,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTheme='';
 
     function drawClock(){
-        const W=72,cx=36,cy=36,r=32;
+        const W=76,cx=38,cy=38,r=34;
         const now=new Date();
         const accent=accentColors[currentTheme]||'#8b5cf6';
         clockCtx.clearRect(0,0,W,W);
 
-        // Just 4 subtle tick marks
+        // Subtle accent ring
+        clockCtx.beginPath();clockCtx.arc(cx,cy,r-1,0,Math.PI*2);
+        clockCtx.strokeStyle=accent;clockCtx.globalAlpha=0.15;clockCtx.lineWidth=0.5;clockCtx.stroke();
+        clockCtx.globalAlpha=1;
+
+        // 4 tick marks
         for(let i=0;i<4;i++){
             const angle=(i/4)*Math.PI*2-Math.PI/2;
             clockCtx.beginPath();
             clockCtx.moveTo(cx+Math.cos(angle)*26,cy+Math.sin(angle)*26);
             clockCtx.lineTo(cx+Math.cos(angle)*30,cy+Math.sin(angle)*30);
-            clockCtx.strokeStyle='rgba(232,228,222,0.12)';clockCtx.lineWidth=1;
+            clockCtx.strokeStyle='rgba(232,228,222,0.25)';clockCtx.lineWidth=1;
             clockCtx.lineCap='round';clockCtx.stroke();
         }
 
@@ -363,20 +368,24 @@ document.addEventListener('DOMContentLoaded', () => {
         clockCtx.lineCap='round';
         // Hour
         clockCtx.beginPath();clockCtx.moveTo(cx,cy);
-        clockCtx.lineTo(cx+Math.cos(hA)*16,cy+Math.sin(hA)*16);
-        clockCtx.strokeStyle='rgba(232,228,222,0.6)';clockCtx.lineWidth=1.5;clockCtx.stroke();
+        clockCtx.lineTo(cx+Math.cos(hA)*18,cy+Math.sin(hA)*18);
+        clockCtx.strokeStyle='rgba(232,228,222,0.85)';clockCtx.lineWidth=2;clockCtx.stroke();
         // Minute
         clockCtx.beginPath();clockCtx.moveTo(cx,cy);
-        clockCtx.lineTo(cx+Math.cos(mA)*24,cy+Math.sin(mA)*24);
-        clockCtx.strokeStyle='rgba(232,228,222,0.4)';clockCtx.lineWidth=1;clockCtx.stroke();
-        // Second — accent
+        clockCtx.lineTo(cx+Math.cos(mA)*26,cy+Math.sin(mA)*26);
+        clockCtx.strokeStyle='rgba(232,228,222,0.6)';clockCtx.lineWidth=1.2;clockCtx.stroke();
+        // Second — accent with glow
+        clockCtx.shadowBlur=6;clockCtx.shadowColor=accent;
         clockCtx.beginPath();
-        clockCtx.moveTo(cx+Math.cos(sA)*(-3),cy+Math.sin(sA)*(-3));
-        clockCtx.lineTo(cx+Math.cos(sA)*28,cy+Math.sin(sA)*28);
-        clockCtx.strokeStyle=accent;clockCtx.lineWidth=0.5;clockCtx.stroke();
-        // Center — tiny accent dot
-        clockCtx.beginPath();clockCtx.arc(cx,cy,2,0,Math.PI*2);
+        clockCtx.moveTo(cx+Math.cos(sA)*(-4),cy+Math.sin(sA)*(-4));
+        clockCtx.lineTo(cx+Math.cos(sA)*30,cy+Math.sin(sA)*30);
+        clockCtx.strokeStyle=accent;clockCtx.lineWidth=0.7;clockCtx.stroke();
+        clockCtx.shadowBlur=0;
+        // Center — accent dot with glow
+        clockCtx.shadowBlur=4;clockCtx.shadowColor=accent;
+        clockCtx.beginPath();clockCtx.arc(cx,cy,2.5,0,Math.PI*2);
         clockCtx.fillStyle=accent;clockCtx.fill();
+        clockCtx.shadowBlur=0;
     }
     drawClock();setInterval(drawClock,1000);
 
