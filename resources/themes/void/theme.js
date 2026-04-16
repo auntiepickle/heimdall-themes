@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clockContainer.id='clock-container';
     clockContainer.style.display=isHomePage?'block':'none';
     const clockCanvas=document.createElement('canvas');
-    clockCanvas.width=76;clockCanvas.height=76;
+    clockCanvas.width=80;clockCanvas.height=80;
     clockContainer.appendChild(clockCanvas);
     document.body.appendChild(clockContainer);
     clockContainer.addEventListener('click',()=>{window.location.href='/';});
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTheme='';
 
     function drawClock(){
-        const W=76,cx=38,cy=38,r=34;
+        const W=80,cx=40,cy=40,r=36;
         const now=new Date();
         const accent=accentColors[currentTheme]||'#8b5cf6';
         clockCtx.clearRect(0,0,W,W);

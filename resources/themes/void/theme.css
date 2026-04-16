@@ -110,24 +110,25 @@ body.night { --void-accent: #3b82f6; --void-accent-glow: rgba(59,130,246,0.15); 
 
 #clock-container {
     position: fixed !important;
-    top: 14px !important;
+    top: 16px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    z-index: 20 !important;
-    width: 76px !important;
-    height: 76px !important;
+    z-index: 100 !important;
+    width: 80px !important;
+    height: 80px !important;
     border-radius: 50% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     cursor: pointer !important;
-    background: rgba(15,15,18,0.92) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    background: rgba(10,10,12,0.95) !important;
+    border: 1px solid var(--void-accent, #8b5cf6) !important;
+    border-opacity: 0.3;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 15px var(--void-accent-glow, rgba(139,92,246,0.15));
     transition: all 0.3s cubic-bezier(0.16,1,0.3,1) !important;
 }
 #clock-container:hover {
-    transform: translateX(-50%) scale(1.06) !important;
-    border-color: var(--void-accent-glow) !important;
-    box-shadow: 0 0 24px var(--void-accent-glow), 0 0 0 1px var(--void-accent-glow);
+    transform: translateX(-50%) scale(1.08) !important;
+    border-color: var(--void-accent, #8b5cf6) !important;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 20px var(--void-accent-glow, rgba(139,92,246,0.25));
 }
 @media (max-width: 768px) {
     #clock-container { width: 60px !important; height: 60px !important; top: 8px !important; }
