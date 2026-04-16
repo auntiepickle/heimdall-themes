@@ -21,20 +21,20 @@ body::before {
 }
 
 div.item {
-    background: var(--card-bg, rgba(245,240,225,0.82)) !important;
-    backdrop-filter: blur(10px) saturate(120%);
-    border: 1px solid var(--card-border, rgba(74,120,68,0.2)) !important;
-    border-radius: 20px !important;
-    box-shadow: 0 8px 28px var(--card-shadow, rgba(42,65,38,0.15)) !important;
-    transition: all 0.4s ease;
-    margin: 20px;
-    padding: 22px !important;
+    background: var(--card-bg, rgba(35,48,30,0.55)) !important;
+    backdrop-filter: blur(14px) saturate(110%);
+    border: 1px solid var(--card-border, rgba(74,120,68,0.12)) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px var(--card-shadow, rgba(0,0,0,0.2)) !important;
+    transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+    margin: 16px;
+    padding: 18px !important;
 }
 div.item:hover {
-    transform: translateY(-6px) scale(1.02) !important;
-    background: var(--card-hover, rgba(245,240,225,0.92)) !important;
-    box-shadow: 0 16px 42px var(--card-shadow-hover, rgba(42,65,38,0.22)) !important;
-    border-color: var(--accent, rgba(74,222,128,0.4)) !important;
+    transform: translateY(-3px) !important;
+    background: var(--card-hover, rgba(40,55,35,0.65)) !important;
+    box-shadow: 0 8px 30px var(--card-shadow-hover, rgba(0,0,0,0.3)) !important;
+    border-color: var(--accent, rgba(74,222,128,0.25)) !important;
 }
 div.item .title {
     font-size: 1.25em !important;
@@ -51,11 +51,11 @@ div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="ba
 div.item:hover .app-icon img { transform: scale(1.12); }
 
 header, .navbar {
-    background: var(--header-bg, rgba(245,240,225,0.88)) !important;
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--card-border, rgba(74,120,68,0.15));
+    background: var(--header-bg, rgba(25,40,22,0.85)) !important;
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--card-border, rgba(74,120,68,0.1));
 }
-header *, .navbar * { color: var(--text, #2d3b2a) !important; }
+header *, .navbar * { color: var(--text, #c8dcc4) !important; }
 
 input, textarea {
     background: var(--input-bg, rgba(245,240,225,0.95)) !important;
@@ -67,19 +67,19 @@ input, textarea {
 
 /* Day: sunlit forest clearing */
 body.day {
-    --card-bg: rgba(245,240,225,0.82); --card-hover: rgba(245,240,225,0.92);
-    --card-border: rgba(74,120,68,0.2); --card-shadow: rgba(42,65,38,0.12);
-    --card-shadow-hover: rgba(42,65,38,0.2); --accent: rgba(74,222,128,0.4);
-    --text: #2d3b2a; --text-soft: #4a6548; --header-bg: rgba(245,240,225,0.88);
-    --input-bg: rgba(245,240,225,0.95);
+    --card-bg: rgba(35,55,30,0.5); --card-hover: rgba(40,60,35,0.6);
+    --card-border: rgba(74,120,68,0.12); --card-shadow: rgba(0,0,0,0.15);
+    --card-shadow-hover: rgba(0,0,0,0.25); --accent: rgba(74,222,128,0.3);
+    --text: #c8dcc4; --text-soft: #8aab86; --header-bg: rgba(25,40,22,0.85);
+    --input-bg: rgba(30,45,25,0.9);
 }
 /* Evening: golden hour through the canopy */
 body.evening {
-    --card-bg: rgba(235,215,180,0.8); --card-hover: rgba(235,215,180,0.9);
-    --card-border: rgba(180,120,50,0.25); --card-shadow: rgba(80,50,20,0.15);
-    --card-shadow-hover: rgba(80,50,20,0.25); --accent: rgba(251,191,36,0.4);
-    --text: #3b2f1e; --text-soft: #6b5538; --header-bg: rgba(235,215,180,0.88);
-    --input-bg: rgba(235,215,180,0.95);
+    --card-bg: rgba(50,35,18,0.55); --card-hover: rgba(55,40,22,0.65);
+    --card-border: rgba(180,120,50,0.12); --card-shadow: rgba(0,0,0,0.2);
+    --card-shadow-hover: rgba(0,0,0,0.3); --accent: rgba(251,191,36,0.3);
+    --text: #d4c0a0; --text-soft: #9a8060; --header-bg: rgba(40,28,14,0.88);
+    --input-bg: rgba(40,28,14,0.9);
 }
 /* Night: moonlit mushroom grove */
 body.night {

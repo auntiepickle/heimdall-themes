@@ -37,7 +37,20 @@
         /* editable using the 'Settings > Advanced > Custom CSS' option */
         {!! \App\Setting::fetch('custom_css') !!}
         </style>
-    {{-- THEME CLOCK MOBILE FIX --}}
+    {{-- THEME GLOBAL FIXES --}}
+    <style>
+    .item .link {
+        width: auto !important;
+        left: auto !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+    .message-container {
+        position: relative;
+        z-index: 25 !important;
+        margin-top: 60px !important;
+    }
+    </style>
     <style>
     @media (max-width: 768px) {
         #clock-container {
@@ -53,7 +66,8 @@
             width: 100% !important;
             height: 100% !important;
         }
-        .appheader { margin-top: 52px !important; }
+        .appheader { margin-top: 0 !important; }
+        body.has-clock .appheader { margin-top: 52px !important; }
     }
     </style>
     {{-- THEMES --}}
