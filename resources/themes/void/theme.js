@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const themeCfg = window.__HEIMDALL_THEME__ || {};
 
-    // ====================== MORPHING BLOB SHADER ======================
+    // ====================== METABALL SHADER ======================
     const blobCanvas = document.createElement('canvas');
     blobCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;';
     document.body.insertBefore(blobCanvas, document.body.firstChild);
@@ -29,9 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
                            mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
             }
-            float fbm(vec2 p){float v=0.,a=0.5;for(int i=0;i<6;i++){v+=a*noise(p);p*=2.1;a*=0.48;}return v;}
+            float fbm(vec2 p){float v=0.,a=0.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.1;a*=0.48;}return v;}
 
-            // SDF circle
+            // Smooth minimum for organic blob merging
+            float smin(float a,float b,float k){
+                float h=clamp(0.5+0.5*(b-a)/k,0.,1.);
+                return mix(b,a,h)-k*h*(1.-h);
+            }
             float sdCircle(vec2 p,float r){return length(p)-r;}
 
             void main(){
@@ -39,55 +43,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 float t=u_time;
                 vec2 mouse=(u_mouse-u_resolution*0.5)/min(u_resolution.x,u_resolution.y);
 
-                // Accent colors by variant
+                // Accent colors
                 vec3 accent;
-                if(u_theme<0.5) accent=vec3(0.545,0.361,0.965);      // violet
-                else if(u_theme<1.5) accent=vec3(1.0,0.176,0.333);   // pink
-                else accent=vec3(0.231,0.510,0.965);                   // blue
+                vec3 accent2; // ghost counter-color for rim
+                if(u_theme<0.5){accent=vec3(0.545,0.361,0.965);accent2=vec3(0.361,0.965,0.69);}
+                else if(u_theme<1.5){accent=vec3(1.0,0.176,0.333);accent2=vec3(0.176,0.8,0.6);}
+                else{accent=vec3(0.231,0.510,0.965);accent2=vec3(0.361,0.965,0.545);}
 
-                // Noise displacement on blob boundary
-                float noiseVal=fbm(uv*3.+t*0.08);
-                float noiseVal2=fbm(uv*2.-t*0.06+vec2(5.));
+                // Domain warping for organic feel
+                vec2 warp=vec2(fbm(uv*2.+t*0.06),fbm(uv*2.+t*0.06+5.))*0.08;
+                vec2 wuv=uv+warp;
 
-                // Mouse attraction — blob subtly reaches toward cursor
+                // Noise displacement per blob
+                float n1=fbm(wuv*3.+t*0.08)*0.12;
+                float n2=fbm(wuv*2.5-t*0.07+3.)*0.10;
+                float n3=fbm(wuv*3.5+t*0.05+7.)*0.08;
+
+                // Mouse attraction
                 vec2 toMouse=mouse-uv;
-                float mouseDist=length(toMouse);
-                vec2 pull=toMouse*0.08/(0.5+mouseDist);
+                float mDist=length(toMouse);
+                vec2 pull=toMouse*0.06/(0.4+mDist);
 
-                // Main blob — SDF with noise displacement
-                float blobR=0.28+sin(t*0.2)*0.03;
-                float displacement=(noiseVal-0.5)*0.18+(noiseVal2-0.5)*0.12;
-                float d=sdCircle(uv+pull,blobR+displacement);
+                // Three orbiting metaballs merged with smin
+                vec2 c1=pull;
+                vec2 c2=vec2(sin(t*0.19)*0.22,cos(t*0.23)*0.16);
+                vec2 c3=vec2(cos(t*0.17)*0.18,sin(t*0.29)*0.14);
 
-                // Smooth edge
-                float blob=smoothstep(0.02,-0.04,d);
+                float d1=sdCircle(wuv-c1,0.20+n1);
+                float d2=sdCircle(wuv-c2,0.13+n2);
+                float d3=sdCircle(wuv-c3,0.10+n3);
+                float d=smin(smin(d1,d2,0.18),d3,0.18);
 
-                // Inner glow — brighter toward center
-                float inner=smoothstep(0.15,-0.1,d);
-                float core=smoothstep(0.0,-0.15,d);
+                // Layers
+                float blob=smoothstep(0.02,-0.03,d);
+                float inner=smoothstep(0.08,-0.12,d);
+                float core=smoothstep(-0.02,-0.18,d);
+                float rim=smoothstep(-0.01,0.015,d)*smoothstep(0.04,-0.01,d);
 
-                // Fresnel rim
-                float rim=smoothstep(-0.02,0.01,d)*smoothstep(0.05,-0.01,d);
+                // Fake metallic reflection via noise gradient
+                float nx=noise(wuv*8.+t*0.1+0.5)-noise(wuv*8.+t*0.1-0.5);
+                float ny=noise(wuv*8.+t*0.1+vec2(0.,0.5).y)-noise(wuv*8.+t*0.1-vec2(0.,0.5).y);
+                vec2 nrm=vec2(nx,ny)*4.;
+                float refl=dot(normalize(vec3(nrm,1.)),normalize(vec3(mouse*2.,1.)));
+                refl=pow(max(refl,0.),3.)*0.3;
 
-                // Color composition
-                vec3 blobColor=accent*0.3*blob;
-                blobColor+=accent*0.6*inner*0.5;
-                blobColor+=accent*1.2*core*0.3;
-                blobColor+=vec3(1.)*rim*0.15;
+                // Color: dark mass with accent edge + ghost counter-color in rim
+                vec3 blobColor=vec3(0.02)*blob;
+                blobColor+=accent*0.15*inner;
+                blobColor+=vec3(refl)*inner*0.5;
+                blobColor+=accent*0.8*core*0.15;
+                blobColor+=mix(accent*1.2,accent2*0.5,0.3)*rim*0.35;
 
-                // Subtle ambient glow around blob
-                float ambientGlow=1./(1.+pow(length(uv)*3.,2.))*0.04;
-                vec3 ambient=accent*ambientGlow;
+                // Ambient glow
+                float ambGlow=1./(1.+pow(length(uv)*3.5,2.5))*0.025;
+                vec3 ambient=accent*ambGlow;
 
-                // Mouse spotlight — very subtle warmth
-                float spotDist=length(uv-mouse);
-                float spot=1./(1.+pow(spotDist*5.,2.))*0.03;
+                // Cursor ripple
+                float ripple=sin(mDist*25.-t*3.)*exp(-mDist*6.)*0.015*blob;
 
-                // Film grain
-                float grain=(hash(uv*800.+fract(t*11.))-0.5)*0.06;
+                // Chromatic aberration near blob edge
+                float caStr=rim*0.008;
+                float rOff=smoothstep(0.02,-0.04,d+caStr);
+                float bOff=smoothstep(0.02,-0.04,d-caStr);
+                vec3 ca=vec3(rOff-blob,0.,bOff-blob)*accent*0.2;
 
-                vec3 color=blobColor+ambient+vec3(1.)*spot+grain;
-                float alpha=clamp(blob*0.9+rim*0.3+ambientGlow*8.+spot*4.,0.,0.95);
+                vec3 color=blobColor+ambient+ca+vec3(ripple);
+                float alpha=clamp(blob*0.95+rim*0.4+ambGlow*10.,0.,0.98);
 
                 gl_FragColor=vec4(clamp(color,0.,1.),alpha);
             }
@@ -123,33 +144,39 @@ document.addEventListener('DOMContentLoaded', () => {
         animateBlob();
     }
 
-    // ====================== GRAIN OVERLAY ======================
+    // ====================== GRAIN + SCANLINE ======================
     const grainCanvas=document.createElement('canvas');
-    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:overlay;opacity:0.4;';
+    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:overlay;opacity:0.35;';
     document.body.appendChild(grainCanvas);
     const gCtx=grainCanvas.getContext('2d');
+    let grainW=0,grainH=0;
 
     function animateGrain(){
-        grainCanvas.width=window.innerWidth;grainCanvas.height=window.innerHeight;
-        const w=grainCanvas.width,h=grainCanvas.height;
-        const imgData=gCtx.createImageData(w,h);
+        if(grainCanvas.width!==window.innerWidth||grainCanvas.height!==window.innerHeight){
+            grainCanvas.width=window.innerWidth;grainCanvas.height=window.innerHeight;
+            grainW=grainCanvas.width;grainH=grainCanvas.height;
+        }
+        const imgData=gCtx.createImageData(grainW,grainH);
         const d=imgData.data;
-        for(let i=0;i<d.length;i+=4){
+        for(let i=0;i<d.length;i+=16){
             const v=Math.random()*255;
-            d[i]=d[i+1]=d[i+2]=v;d[i+3]=20;
+            d[i]=d[i+1]=d[i+2]=v;d[i+3]=18;
+            d[i+4]=d[i+5]=d[i+6]=v;d[i+7]=18;
+            d[i+8]=d[i+9]=d[i+10]=v;d[i+11]=18;
+            d[i+12]=d[i+13]=d[i+14]=v;d[i+15]=18;
         }
         gCtx.putImageData(imgData,0,0);
         requestAnimationFrame(animateGrain);
     }
     animateGrain();
 
-    // ====================== CLOCK — minimal ======================
+    // ====================== CLOCK — ultra minimal ======================
     const isHomePage=!(/settings|items|users|tags/.test(window.location.pathname));
     const clockContainer=document.createElement('div');
     clockContainer.id='clock-container';
     clockContainer.style.display=isHomePage?'block':'none';
     const clockCanvas=document.createElement('canvas');
-    clockCanvas.width=80;clockCanvas.height=80;
+    clockCanvas.width=72;clockCanvas.height=72;
     clockContainer.appendChild(clockCanvas);
     document.body.appendChild(clockContainer);
     clockContainer.addEventListener('click',()=>{window.location.href='/';});
@@ -165,22 +192,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTheme='';
 
     function drawClock(){
-        const W=80,cx=40,cy=40,r=36;
+        const W=72,cx=36,cy=36,r=32;
         const now=new Date();
         const accent=accentColors[currentTheme]||'#8b5cf6';
         clockCtx.clearRect(0,0,W,W);
 
-        // Face — barely there
-        clockCtx.beginPath();clockCtx.arc(cx,cy,r,0,Math.PI*2);
-        clockCtx.fillStyle='rgba(20,20,20,0.9)';clockCtx.fill();
-
-        // Minimal tick marks — only 4
+        // Just 4 subtle tick marks
         for(let i=0;i<4;i++){
             const angle=(i/4)*Math.PI*2-Math.PI/2;
             clockCtx.beginPath();
-            clockCtx.moveTo(cx+Math.cos(angle)*30,cy+Math.sin(angle)*30);
-            clockCtx.lineTo(cx+Math.cos(angle)*34,cy+Math.sin(angle)*34);
-            clockCtx.strokeStyle='rgba(255,255,255,0.15)';clockCtx.lineWidth=1;
+            clockCtx.moveTo(cx+Math.cos(angle)*26,cy+Math.sin(angle)*26);
+            clockCtx.lineTo(cx+Math.cos(angle)*30,cy+Math.sin(angle)*30);
+            clockCtx.strokeStyle='rgba(232,228,222,0.12)';clockCtx.lineWidth=1;
             clockCtx.lineCap='round';clockCtx.stroke();
         }
 
@@ -190,23 +213,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const sA=(Math.PI/30)*s-Math.PI/2;
 
         clockCtx.lineCap='round';
-        // Hour — white, thin
+        // Hour
+        clockCtx.beginPath();clockCtx.moveTo(cx,cy);
+        clockCtx.lineTo(cx+Math.cos(hA)*16,cy+Math.sin(hA)*16);
+        clockCtx.strokeStyle='rgba(232,228,222,0.6)';clockCtx.lineWidth=1.5;clockCtx.stroke();
+        // Minute
+        clockCtx.beginPath();clockCtx.moveTo(cx,cy);
+        clockCtx.lineTo(cx+Math.cos(mA)*24,cy+Math.sin(mA)*24);
+        clockCtx.strokeStyle='rgba(232,228,222,0.4)';clockCtx.lineWidth=1;clockCtx.stroke();
+        // Second — accent
         clockCtx.beginPath();
-        clockCtx.moveTo(cx,cy);
-        clockCtx.lineTo(cx+Math.cos(hA)*18,cy+Math.sin(hA)*18);
-        clockCtx.strokeStyle='rgba(255,255,255,0.7)';clockCtx.lineWidth=2;clockCtx.stroke();
-        // Minute — white, thinner
-        clockCtx.beginPath();
-        clockCtx.moveTo(cx,cy);
-        clockCtx.lineTo(cx+Math.cos(mA)*28,cy+Math.sin(mA)*28);
-        clockCtx.strokeStyle='rgba(255,255,255,0.5)';clockCtx.lineWidth=1.2;clockCtx.stroke();
-        // Second — accent color
-        clockCtx.beginPath();
-        clockCtx.moveTo(cx+Math.cos(sA)*(-4),cy+Math.sin(sA)*(-4));
-        clockCtx.lineTo(cx+Math.cos(sA)*32,cy+Math.sin(sA)*32);
-        clockCtx.strokeStyle=accent;clockCtx.lineWidth=0.6;clockCtx.stroke();
-        // Center — accent dot
-        clockCtx.beginPath();clockCtx.arc(cx,cy,2.5,0,Math.PI*2);
+        clockCtx.moveTo(cx+Math.cos(sA)*(-3),cy+Math.sin(sA)*(-3));
+        clockCtx.lineTo(cx+Math.cos(sA)*28,cy+Math.sin(sA)*28);
+        clockCtx.strokeStyle=accent;clockCtx.lineWidth=0.5;clockCtx.stroke();
+        // Center — tiny accent dot
+        clockCtx.beginPath();clockCtx.arc(cx,cy,2,0,Math.PI*2);
         clockCtx.fillStyle=accent;clockCtx.fill();
     }
     drawClock();setInterval(drawClock,1000);
