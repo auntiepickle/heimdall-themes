@@ -177,4 +177,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateTheme();
     setInterval(updateTheme, 60000);
+
+    // ====================== CARD SPARKS ======================
+    document.querySelectorAll('.item').forEach(item=>{
+        const container=document.createElement('div');
+        container.className='sparks';
+        item.appendChild(container);
+
+        item.addEventListener('mouseenter',()=>{
+            for(let i=0;i<8;i++){
+                const spark=document.createElement('div');
+                spark.className='spark';
+                const edge=Math.floor(Math.random()*4);
+                let x,y;
+                if(edge===0){x=Math.random()*100;y=0;}
+                else if(edge===1){x=Math.random()*100;y=100;}
+                else if(edge===2){x=0;y=Math.random()*100;}
+                else{x=100;y=Math.random()*100;}
+                spark.style.left=x+'%';
+                spark.style.top=y+'%';
+                spark.style.setProperty('--sx',(Math.random()*40-20)+'px');
+                spark.style.setProperty('--sy',(Math.random()*40-20)+'px');
+                spark.style.animationDelay=(Math.random()*0.15)+'s';
+                container.appendChild(spark);
+                setTimeout(()=>spark.remove(),700);
+            }
+        });
+    });
+
+    // Re-attach sparks after navigation (Heimdall SPA-like behavior)
+    const observer=new MutationObserver(()=>{
+        document.querySelectorAll('.item:not([data-sparks])').forEach(item=>{
+            item.setAttribute('data-sparks','1');
+            const container=document.createElement('div');
+            container.className='sparks';
+            item.appendChild(container);
+            item.addEventListener('mouseenter',()=>{
+                for(let i=0;i<8;i++){
+                    const spark=document.createElement('div');
+                    spark.className='spark';
+                    const edge=Math.floor(Math.random()*4);
+                    let x,y;
+                    if(edge===0){x=Math.random()*100;y=0;}
+                    else if(edge===1){x=Math.random()*100;y=100;}
+                    else if(edge===2){x=0;y=Math.random()*100;}
+                    else{x=100;y=Math.random()*100;}
+                    spark.style.left=x+'%';
+                    spark.style.top=y+'%';
+                    spark.style.setProperty('--sx',(Math.random()*40-20)+'px');
+                    spark.style.setProperty('--sy',(Math.random()*40-20)+'px');
+                    spark.style.animationDelay=(Math.random()*0.15)+'s';
+                    container.appendChild(spark);
+                    setTimeout(()=>spark.remove(),700);
+                }
+            });
+        });
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
 });
