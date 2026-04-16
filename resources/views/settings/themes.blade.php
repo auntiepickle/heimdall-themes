@@ -47,6 +47,7 @@
                     'aurora' => 'background:linear-gradient(135deg,#020212 0%,#0e4d64 40%,#00ff87 80%,#7b2d8e 100%);',
                     'woodland' => 'background:linear-gradient(135deg,#2d3b2a 0%,#4a6548 40%,#8aab86 100%);',
                     'void' => 'background:#0a0a0a;',
+                    'rivendell' => 'background:linear-gradient(135deg,#1a150e 0%,#4a3520 30%,#29446a 70%,#0a0a14 100%);',
                 ];
                 $previewIcons = [
                     'lofi-night' => '&#127769;',
@@ -54,6 +55,7 @@
                     'aurora' => '&#10024;',
                     'woodland' => '&#127807;',
                     'void' => '&#9679;',
+                    'rivendell' => '&#127964;',
                 ];
                 $pStyle = $previewStyles[$theme->slug] ?? 'background:linear-gradient(135deg,#1e2a45,#0a0a14);';
                 $pIcon = $previewIcons[$theme->slug] ?? '&#127912;';

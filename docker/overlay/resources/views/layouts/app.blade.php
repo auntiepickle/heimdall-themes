@@ -84,6 +84,38 @@
     @if($activeTheme->hasJs())<script defer src="{{$activeTheme->jsUrl()}}"></script>@endif
     @endif
     {{-- END THEMES --}}
+    @if($activeTheme)
+    {{-- IDLE UI FADE: tiles fade out after 30s idle, effects take over --}}
+    <script>
+    document.addEventListener('DOMContentLoaded',()=>{
+        const app=document.getElementById('app');
+        const nav=document.querySelector('.appheader');
+        const cfg=document.getElementById('config-buttons');
+        if(!app) return;
+        let lastAct=Date.now(), idleOpacity=1;
+        const IDLE_START=30000, FADE_MIN=0.15, FADE_SPEED=0.008;
+        function onAct(){lastAct=Date.now();}
+        document.addEventListener('mousemove',onAct);
+        document.addEventListener('keydown',onAct);
+        document.addEventListener('click',onAct);
+        document.addEventListener('scroll',onAct,true);
+        document.addEventListener('touchstart',onAct);
+        function tick(){
+            const idle=Date.now()-lastAct;
+            if(idle>IDLE_START){
+                idleOpacity=Math.max(idleOpacity-FADE_SPEED,FADE_MIN);
+            }else{
+                idleOpacity=Math.min(idleOpacity+0.05,1);
+            }
+            app.style.opacity=idleOpacity;
+            if(nav) nav.style.opacity=idleOpacity;
+            if(cfg) cfg.style.opacity=idleOpacity;
+            requestAnimationFrame(tick);
+        }
+        tick();
+    });
+    </script>
+    @endif
 </head>
     <body>
         <div id="app"{!! $alt_bg !!}>
