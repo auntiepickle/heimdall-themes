@@ -25,6 +25,19 @@
                     </div>
                 </div>
             </label>
+            {{-- Random --}}
+            <label style="cursor:pointer;display:block;">
+                <input type="radio" name="theme_name" value="__random__" {{ $activeSlug==='__random__'?'checked':'' }} style="display:none;" class="tr">
+                <div class="tc {{ $activeSlug==='__random__'?'ta':'' }}">
+                    <div class="tc-preview" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460,#e94560);">
+                        <span style="font-size:2.2rem;">&#127922;</span>
+                    </div>
+                    <div class="tc-info">
+                        <div class="tc-name">Random</div>
+                        <div class="tc-desc">Different theme on every page load</div>
+                    </div>
+                </div>
+            </label>
             {{-- Themes --}}
             @foreach($themes as $theme)
             @php

@@ -5,7 +5,8 @@ use App\Models\Theme; use App\Setting; use Illuminate\Http\Request;
 class ThemeController extends Controller {
     public function index() {
         $themes = Theme::all()->filter(fn($t) => !str_starts_with(basename($t->path), '_'));
-        $activeSlug = self::getThemeName();
+        $raw = Setting::fetch('theme_name');
+        $activeSlug = ($raw && $raw !== false) ? $raw : null;
         return view("settings.themes", [
             "themes" => $themes,
             "activeSlug" => $activeSlug,
@@ -14,7 +15,7 @@ class ThemeController extends Controller {
 
     public function update(Request $request) {
         $slug = trim($request->input('theme_name', ''));
-        if ($slug && !Theme::find($slug)) {
+        if ($slug && $slug !== '__random__' && !Theme::find($slug)) {
             return back()->withErrors(["theme_name" => "Theme not found."]);
         }
 
@@ -31,7 +32,7 @@ class ThemeController extends Controller {
         $setting->value = $slug;
         $setting->save();
 
-        return redirect()->route("dash")->with("success", $slug ? "Theme applied." : "Theme removed.");
+        return redirect()->route("dash")->with("success", $slug === '__random__' ? "Random mode." : ($slug ? "Theme applied." : "Theme removed."));
     }
 
     public function preview(string $slug) {
@@ -42,6 +43,12 @@ class ThemeController extends Controller {
 
     public static function getThemeName(): ?string {
         $val = Setting::fetch('theme_name');
-        return ($val && $val !== false) ? $val : null;
+        if (!$val || $val === false) return null;
+        if ($val === '__random__') {
+            $themes = Theme::all()->filter(fn($t) => !str_starts_with(basename($t->path), '_'));
+            if ($themes->isEmpty()) return null;
+            return $themes->random()->slug;
+        }
+        return $val;
     }
 }
