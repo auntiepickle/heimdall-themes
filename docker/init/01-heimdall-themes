@@ -38,6 +38,15 @@ if [ ! -L "$APP/public/storage" ]; then
     echo "[heimdall-themes] created storage symlink"
 fi
 
+# Clear legacy custom.js/custom.css from /config/www/ — these were used before
+# the theme engine existed. If left in place they double-load with theme.js/css.
+for f in /config/www/custom.js /config/www/custom.css; do
+    if [ -s "$f" ]; then
+        echo "[heimdall-themes] clearing legacy $f (theme engine replaces it)"
+        : > "$f"
+    fi
+done
+
 cd "$APP"
 s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
     echo "[heimdall-themes] migrate skipped (column may already exist)"
