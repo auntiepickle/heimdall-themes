@@ -12,6 +12,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     }
 
+    // ====================== ACTIVITY DETECTION ======================
+    // Dims effects when user is actively interacting, ramps back on idle.
+    let lastActivity = 0;
+    const IDLE_THRESHOLD = 5000;    // 5s of no input = idle
+    const ACTIVE_INTENSITY = 0.3;   // effects at 30% when active
+    const RAMP_BACK_SPEED = 0.002;  // slow ease back to full
+    let activityDim = 1.0;
+
+    function onActivity() { lastActivity = Date.now(); }
+    document.addEventListener('mousemove', onActivity);
+    document.addEventListener('keydown', onActivity);
+    document.addEventListener('click', onActivity);
+    document.addEventListener('scroll', onActivity, true);
+
+    function getActivityMultiplier() {
+        const idle = Date.now() - lastActivity;
+        if (idle < IDLE_THRESHOLD) {
+            activityDim = Math.max(activityDim - 0.04, ACTIVE_INTENSITY);
+        } else {
+            activityDim = Math.min(activityDim + RAMP_BACK_SPEED * (idle - IDLE_THRESHOLD) * 0.001, 1.0);
+        }
+        return activityDim;
+    }
+
     // ====================== LOAD RAMP ======================
     const rampStart = Date.now();
     function layerRamp(delayMs, durationMs) {
@@ -374,10 +398,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function animateShaders(){
         const t=(Date.now()-startTime)/1000;
+        const act=getActivityMultiplier();
         const atmoTarget   = parseFloat(atmoCanvas.dataset.baseOpacity   || 0.52);
         const glitchTarget = parseFloat(glitchCanvas.dataset.baseOpacity  || 0.46);
-        atmoCanvas.style.opacity   = (atmoTarget   * getAtmoRamp()).toFixed(3);
-        glitchCanvas.style.opacity = (glitchTarget * getGlitchRamp()).toFixed(3);
+        atmoCanvas.style.opacity   = (atmoTarget   * getAtmoRamp() * act).toFixed(3);
+        glitchCanvas.style.opacity = (glitchTarget * getGlitchRamp() * act).toFixed(3);
 
         for(const[c,info]of[[atmoCanvas,atmoCtx],[glitchCanvas,glitchCtx]]){
             if(!info)continue;
@@ -668,8 +693,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const w=canvas.width, h=canvas.height;
         const now=Date.now()/1000;
-        const particleRamp  = getParticleRamp();
-        const fireflyRamp   = getFireflyRamp();
+        const act=getActivityMultiplier();
+        const particleRamp  = getParticleRamp() * act;
+        const fireflyRamp   = getFireflyRamp() * act;
 
         particles.forEach((p,i)=>{
             if(p.type==='leaf'){
