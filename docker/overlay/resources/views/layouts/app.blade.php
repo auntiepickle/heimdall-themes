@@ -37,6 +37,25 @@
         /* editable using the 'Settings > Advanced > Custom CSS' option */
         {!! \App\Setting::fetch('custom_css') !!}
         </style>
+    {{-- THEME CLOCK MOBILE FIX --}}
+    <style>
+    @media (max-width: 768px) {
+        #clock-container {
+            position: fixed !important;
+            top: 4px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 48px !important;
+            height: 48px !important;
+            z-index: 20 !important;
+        }
+        #clock-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .appheader { margin-top: 52px !important; }
+    }
+    </style>
     {{-- THEMES --}}
     @php
         $activeTheme = null;
