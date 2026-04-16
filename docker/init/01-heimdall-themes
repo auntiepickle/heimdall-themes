@@ -29,6 +29,15 @@ chown -R abc:users \
     "$APP/routes/web.php" \
     "$APP/database/migrations/2025_01_01_000000_add_theme_to_settings.php"
 
+# Laravel storage:link — AppServiceProvider calls Artisan::call('storage:link')
+# on boot if public/storage/.gitignore is missing, which fails with permission
+# denied inside the container. Create the symlink here so the app skips that call.
+if [ ! -L "$APP/public/storage" ]; then
+    ln -sf "$APP/storage/app/public" "$APP/public/storage"
+    chown -h abc:users "$APP/public/storage"
+    echo "[heimdall-themes] created storage symlink"
+fi
+
 cd "$APP"
 s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
     echo "[heimdall-themes] migrate skipped (column may already exist)"
