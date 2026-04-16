@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ====================== CONFIG ======================
     const themeCfg = window.__HEIMDALL_THEME__ || {};
+    const isMobile = window.__HEIMDALL_MOBILE__ || false;
     const backgrounds = themeCfg.backgrounds || {};
     const imageBaseUrl = themeCfg.imageBaseUrl || '';
 
@@ -425,7 +426,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     animateShaders();
 
-    // ====================== FILM GRAIN OVERLAY (always visible) ======================
+    // ====================== FILM GRAIN OVERLAY (always visible, skip on mobile) ======================
+    if(!isMobile){
     const grainCanvas = document.createElement('canvas');
     grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:overlay;opacity:0.55;';
     document.body.appendChild(grainCanvas);
@@ -450,6 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animateGrain);
     }
     animateGrain();
+    }
 
     // ====================== PARTICLE CANVAS ======================
     const canvas = document.createElement('canvas');
@@ -684,15 +687,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function initParticles(theme, w, h) {
         particles = [];
         isRaining = Math.random() < 0.3;
+        const m=isMobile?0.4:1;
         if (theme==='day') {
-            for(let i=0;i<28;i++){ const p=spawnLeaf(w,h); p.y=Math.random()*h; particles.push(p); }
-            if (isRaining) for(let i=0;i<60;i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
+            for(let i=0;i<Math.floor(28*m);i++){ const p=spawnLeaf(w,h); p.y=Math.random()*h; particles.push(p); }
+            if (isRaining) for(let i=0;i<Math.floor(60*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         } else if (theme==='evening') {
-            for(let i=0;i<45;i++){ const p=spawnEmber(w,h); p.y=Math.random()*h+h*0.3; p.life=Math.random(); particles.push(p); }
-            if (isRaining) for(let i=0;i<80;i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
+            for(let i=0;i<Math.floor(45*m);i++){ const p=spawnEmber(w,h); p.y=Math.random()*h+h*0.3; p.life=Math.random(); particles.push(p); }
+            if (isRaining) for(let i=0;i<Math.floor(80*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         } else {
-            for(let i=0;i<35;i++) particles.push(spawnFirefly(w,h));
-            if (isRaining) for(let i=0;i<50;i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
+            for(let i=0;i<Math.floor(35*m);i++) particles.push(spawnFirefly(w,h));
+            if (isRaining) for(let i=0;i<Math.floor(50*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         }
     }
 

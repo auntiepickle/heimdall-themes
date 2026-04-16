@@ -27,7 +27,7 @@ chown -R abc:users \
     "$APP/resources/themes" \
     "$APP/public/themes" \
     "$APP/routes/web.php" \
-    "$APP/database/migrations/2025_01_01_000000_add_theme_to_settings.php"
+    "$APP/config/heimdall-themes.php"
 
 # Laravel storage:link — AppServiceProvider calls Artisan::call('storage:link')
 # on boot if public/storage/.gitignore is missing, which fails with permission

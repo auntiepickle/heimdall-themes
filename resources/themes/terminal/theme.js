@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const themeCfg = window.__HEIMDALL_THEME__ || {};
+    const isMobile = window.__HEIMDALL_MOBILE__ || false;
 
     // ====================== MATRIX RAIN CANVAS ======================
     const canvas = document.createElement('canvas');
