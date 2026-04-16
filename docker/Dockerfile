@@ -14,8 +14,6 @@ ARG STAGE=/heimdall-themes
 COPY app/Http/Controllers/ThemeController.php       ${STAGE}/app/Http/Controllers/ThemeController.php
 COPY app/Models/Theme.php                            ${STAGE}/app/Models/Theme.php
 COPY resources/views/settings/themes.blade.php       ${STAGE}/resources/views/settings/themes.blade.php
-COPY database/migrations/2025_01_01_000000_add_theme_to_settings.php \
-     ${STAGE}/database/migrations/2025_01_01_000000_add_theme_to_settings.php
 
 # Theme assets — need to land in both resources/themes (model discovery)
 # and public/themes (web-accessible CSS/JS)
