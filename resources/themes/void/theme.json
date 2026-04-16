@@ -1,0 +1,14 @@
+{
+    "name": "Void",
+    "slug": "void",
+    "author": "piekel",
+    "description": "Minimalist dark studio — morphing blob, film grain, one accent",
+    "preview": null,
+    "variants": ["day", "evening", "night"],
+    "auto_schedule": {
+        "day":     { "from": 6,  "to": 17 },
+        "evening": { "from": 17, "to": 20 },
+        "night":   { "from": 20, "to": 6  }
+    },
+    "backgrounds": {}
+}

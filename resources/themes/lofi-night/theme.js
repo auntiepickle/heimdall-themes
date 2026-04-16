@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageBaseUrl = themeCfg.imageBaseUrl || '';
 
     function pickBackground(variant) {
-        const list = backgrounds[variant];
-        if (list && list.length) return list[Math.floor(Math.random() * list.length)];
-        if (imageBaseUrl) return `${imageBaseUrl}/${variant}.jpg`;
+        let list = backgrounds[variant];
+        if (!list || !list.length) list = backgrounds['day'] || [];
+        if (list.length) return list[Math.floor(Math.random() * list.length)];
         return '';
     }
 

@@ -9,5 +9,22 @@
         "day":     { "from": 6,  "to": 17 },
         "evening": { "from": 17, "to": 20 },
         "night":   { "from": 20, "to": 6  }
+    },
+    "backgrounds": {
+        "day": [
+            "LxpFUAY.png",
+            "kjGqnFD.png",
+            "bse1X7W.jpeg",
+            "NhrjXt3.jpeg",
+            "p5549fG.jpeg",
+            "WFeB2li.jpeg"
+        ],
+        "night": [
+            "tMYXs4p.jpeg",
+            "JzyAwbw.png",
+            "NbLBrQO.png",
+            "nature-landscape-hawaii-with-digital-art-style.jpg",
+            "9rPIEPP.jpeg"
+        ]
     }
 }
