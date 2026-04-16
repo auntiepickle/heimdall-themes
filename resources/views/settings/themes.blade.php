@@ -13,7 +13,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
             <label style="cursor:pointer;">
                 <input type="radio" name="theme_name" value="" {{ !$activeSlug?"checked":"" }} style="display:none;" class="tr">
-                <div class="tc {{ !$activeSlug?'ta':' }}" style="border-radius:16px;overflow:hidden;border:2px solid transparent;background:rgba(255,255,255,.7);box-shadow:0 4px 16px rgba(0,0,0,.1);transition:all .2s;">
+                <div class="tc {{ !$activeSlug?'ta':'' }}" style="border-radius:16px;overflow:hidden;border:2px solid transparent;background:rgba(255,255,255,.7);box-shadow:0 4px 16px rgba(0,0,0,.1);transition:all .2s;">
                     <div style="height:100px;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">&#127968;</div>
                     <div style="padding:.75rem 1rem;font-weight:800;color:#1e293b;">Default</div>
                 </div>
@@ -21,7 +21,7 @@
             @foreach($themes as $theme)
             <label style="cursor:pointer;">
                 <input type="radio" name="theme_name" value="{{ $theme->slug }}" {{ $activeSlug===$theme->slug?"checked":"" }} style="display:none;" class="tr">
-                <div class="tc {{ $activeSlug===$theme->slug?'ta':' }}" style="border-radius:16px;overflow:hidden;border:2px solid transparent;background:rgba(255,255,255,.7);box-shadow:0 4px 16px rgba(0,0,0,.1);transition:all .2s;">
+                <div class="tc {{ $activeSlug===$theme->slug?'ta':'' }}" style="border-radius:16px;overflow:hidden;border:2px solid transparent;background:rgba(255,255,255,.7);box-shadow:0 4px 16px rgba(0,0,0,.1);transition:all .2s;">
                     <div style="height:100px;background:linear-gradient(135deg,#1e2a45,#0a0a14);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">&#127769;</div>
                     <div style="padding:.75rem 1rem;">
                         <div style="font-weight:800;color:#1e293b;">{{ $theme->name }}</div>
