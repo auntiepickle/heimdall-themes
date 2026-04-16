@@ -47,7 +47,7 @@
     @endphp
     @if($activeTheme)
     <link rel="stylesheet" href="{{$activeTheme->cssUrl()}}">
-    <script>window.__HEIMDALL_THEME__={slug:"{{$activeTheme->slug}}",variant:"{{$activeTheme->currentVariant()}}",multiVariant:{{$activeTheme->isMultiVariant()?"true":"false"}},imageBaseUrl:"{{env('THEME_IMAGE_URL','')}}"};</script>
+    <script>window.__HEIMDALL_THEME__={slug:"{{$activeTheme->slug}}",variant:"{{$activeTheme->currentVariant()}}",multiVariant:{{$activeTheme->isMultiVariant()?"true":"false"}},backgrounds:{!!$activeTheme->backgroundsJson()!!},imageBaseUrl:"{{env('THEME_IMAGE_URL','')}}"};</script>
     @if($activeTheme->hasJs())<script defer src="{{$activeTheme->jsUrl()}}"></script>@endif
     @endif
     {{-- END THEMES --}}

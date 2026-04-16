@@ -1,15 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ====================== CONFIG ======================
-    // Image base URL: configurable via window.__HEIMDALL_THEME__.imageBaseUrl
-    // Falls back gracefully to dark body color if images unavailable.
     const themeCfg = window.__HEIMDALL_THEME__ || {};
+    const backgrounds = themeCfg.backgrounds || {};
     const imageBaseUrl = themeCfg.imageBaseUrl || '';
-    const fallbackBackgrounds = {
-        day:     imageBaseUrl ? `${imageBaseUrl}/day.jpg` : '',
-        evening: imageBaseUrl ? `${imageBaseUrl}/evening.jpg` : '',
-        night:   imageBaseUrl ? `${imageBaseUrl}/night.jpg` : ''
-    };
+
+    function pickBackground(variant) {
+        const list = backgrounds[variant];
+        if (list && list.length) return list[Math.floor(Math.random() * list.length)];
+        if (imageBaseUrl) return `${imageBaseUrl}/${variant}.jpg`;
+        return '';
+    }
 
     // ====================== LOAD RAMP ======================
     const rampStart = Date.now();
@@ -719,8 +720,8 @@ document.addEventListener('DOMContentLoaded', () => {
         else newTheme='night';
         if(newTheme===currentTheme) return;
 
-        let bgUrl = fallbackBackgrounds[newTheme];
-        if (imageBaseUrl) {
+        let bgUrl = pickBackground(newTheme);
+        if (!bgUrl && imageBaseUrl) {
             const themeDir=`${imageBaseUrl}/${newTheme}/`;
             try{
                 const res=await fetch(themeDir);
