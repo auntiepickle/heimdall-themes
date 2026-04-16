@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const themeCfg = window.__HEIMDALL_THEME__ || {};
+    const isMobile = window.__HEIMDALL_MOBILE__ || false;
 
     // ====================== AURORA SHADER ======================
     const auroraCanvas = document.createElement('canvas');

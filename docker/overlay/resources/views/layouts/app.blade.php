@@ -70,6 +70,7 @@
         body.has-clock .appheader { margin-top: 52px !important; }
     }
     </style>
+    <script>window.__HEIMDALL_MOBILE__=/Mobi|Android/i.test(navigator.userAgent)||window.innerWidth<768;</script>
     {{-- THEMES --}}
     @php
         $activeTheme = null;

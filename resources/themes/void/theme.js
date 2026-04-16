@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const themeCfg = window.__HEIMDALL_THEME__ || {};
+    const isMobile = window.__HEIMDALL_MOBILE__ || false;
 
     // ====================== METABALL SHADER ======================
     const blobCanvas = document.createElement('canvas');
