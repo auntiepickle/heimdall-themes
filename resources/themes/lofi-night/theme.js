@@ -425,6 +425,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     animateShaders();
 
+    // ====================== FILM GRAIN OVERLAY (always visible) ======================
+    const grainCanvas = document.createElement('canvas');
+    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:overlay;opacity:0.55;';
+    document.body.appendChild(grainCanvas);
+    const grainCtx = grainCanvas.getContext('2d');
+    let grainW=0,grainH=0,grainFrame=0;
+    function animateGrain(){
+        if(grainCanvas.width!==window.innerWidth||grainCanvas.height!==window.innerHeight){
+            grainCanvas.width=window.innerWidth;grainCanvas.height=window.innerHeight;
+            grainW=grainCanvas.width;grainH=grainCanvas.height;
+        }
+        grainFrame++;
+        if(grainFrame%2!==0){requestAnimationFrame(animateGrain);return;}
+        const imgData=grainCtx.createImageData(grainW,grainH);
+        const d=imgData.data;
+        for(let i=0;i<d.length;i+=4){
+            const fine=(Math.random()-0.5)*2;
+            const g=fine*50;
+            d[i]=128+g*1.12;d[i+1]=128+g*1.04;d[i+2]=128+g*0.88;
+            d[i+3]=16+Math.floor(Math.random()*12);
+        }
+        grainCtx.putImageData(imgData,0,0);
+        requestAnimationFrame(animateGrain);
+    }
+    animateGrain();
+
     // ====================== PARTICLE CANVAS ======================
     const canvas = document.createElement('canvas');
     canvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;';
