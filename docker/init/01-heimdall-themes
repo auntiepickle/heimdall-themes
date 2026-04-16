@@ -65,6 +65,16 @@ else
     echo "[heimdall-themes] already migrated, skipping legacy clear"
 fi
 
+# Pass THEME_IMAGE_URL to Laravel's .env so PHP-FPM can read it
+if [ -n "${THEME_IMAGE_URL:-}" ]; then
+    if grep -q "^THEME_IMAGE_URL=" "$APP/.env" 2>/dev/null; then
+        sed -i "s|^THEME_IMAGE_URL=.*|THEME_IMAGE_URL=${THEME_IMAGE_URL}|" "$APP/.env"
+    else
+        echo "THEME_IMAGE_URL=${THEME_IMAGE_URL}" >> "$APP/.env"
+    fi
+    echo "[heimdall-themes] THEME_IMAGE_URL written to .env"
+fi
+
 cd "$APP"
 s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
     echo "[heimdall-themes] migrate skipped (column may already exist)"
