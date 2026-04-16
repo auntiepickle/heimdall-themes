@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ====================== THEME SWITCHING ======================
-    async function updateTheme(){
+    function updateTheme(){
         const hour=new Date().getHours();
         let newTheme;
         if(hour>=6&&hour<17) newTheme='day';
@@ -721,21 +721,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(newTheme===currentTheme) return;
 
         let bgUrl = pickBackground(newTheme);
-        if (!bgUrl && imageBaseUrl) {
-            const themeDir=`${imageBaseUrl}/${newTheme}/`;
-            try{
-                const res=await fetch(themeDir);
-                if(res.ok){
-                    const html=await res.text();
-                    const doc=new DOMParser().parseFromString(html,'text/html');
-                    const links=Array.from(doc.querySelectorAll('a'))
-                        .map(a=>a.getAttribute('href'))
-                        .filter(h=>h&&/\.(jpg|jpeg|png)$/i.test(h)&&!h.includes('..')&&h!=='/')
-                        .map(h=>new URL(h,themeDir).href);
-                    if(links.length) bgUrl=links[Math.floor(Math.random()*links.length)];
-                }
-            }catch(e){console.error(e);}
-        }
 
         if (bgUrl) {
             parallaxBg.style.backgroundImage=`url('${bgUrl}')`;

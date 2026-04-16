@@ -28,7 +28,7 @@ services:
       - TZ=America/Los_Angeles
       - ALLOW_INTERNAL_REQUESTS=true
       # Point to your image server for background images (optional)
-      - THEME_IMAGE_URL=http://192.168.1.41:8081/heimdallimages
+      - THEME_IMAGE_URL=http://192.168.1.41:8081
     volumes:
       - /home/piekel/server/configs/heimdall-test:/config
     ports:
