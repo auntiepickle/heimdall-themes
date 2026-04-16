@@ -38,14 +38,23 @@ if [ ! -L "$APP/public/storage" ]; then
     echo "[heimdall-themes] created storage symlink"
 fi
 
-# Clear legacy custom.js/custom.css from /config/www/ — these were used before
-# the theme engine existed. If left in place they double-load with theme.js/css.
+# Clear legacy custom.js/custom.css — these were used before the theme engine.
+# Clear both the files AND the database values (stored per-user in pivot table).
 for f in /config/www/custom.js /config/www/custom.css; do
     if [ -s "$f" ]; then
-        echo "[heimdall-themes] clearing legacy $f (theme engine replaces it)"
+        echo "[heimdall-themes] clearing legacy $f"
         : > "$f"
     fi
 done
+s6-setuidgid abc php artisan tinker --execute="
+    \$keys = ['custom_js','custom_css'];
+    foreach (\$keys as \$k) {
+        \$s = \App\Setting::where('key', \$k)->first();
+        if (\$s && \$s->value) { \$s->value = ''; \$s->save(); }
+        if (\$s) { \DB::table('setting_user')->where('setting_id', \$s->id)->update(['uservalue' => '']); }
+    }
+    echo '[heimdall-themes] cleared custom_js/custom_css from DB';
+" 2>&1 || echo "[heimdall-themes] DB clear skipped (non-fatal)"
 
 cd "$APP"
 s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \

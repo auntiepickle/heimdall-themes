@@ -40,16 +40,14 @@
     {{-- THEMES --}}
     @php
         $activeTheme = null;
-        $themeMode = "auto";
         try {
-            $ts = \App\Setting::first();
-            if ($ts && $ts->theme_name) { $activeTheme = \App\Models\Theme::find($ts->theme_name); }
-            $themeMode = $ts->theme_mode ?? "auto";
+            $themeName = \App\Setting::fetch('theme_name');
+            if ($themeName) { $activeTheme = \App\Models\Theme::find($themeName); }
         } catch (\Exception $e) {}
     @endphp
     @if($activeTheme)
     <link rel="stylesheet" href="{{$activeTheme->cssUrl()}}">
-    <script>window.__HEIMDALL_THEME__={slug:"{{$activeTheme->slug}}",mode:"{{$themeMode}}",variant:"{{$activeTheme->currentVariant()}}",multiVariant:{{$activeTheme->isMultiVariant()?"true":"false"}}};</script>
+    <script>window.__HEIMDALL_THEME__={slug:"{{$activeTheme->slug}}",variant:"{{$activeTheme->currentVariant()}}",multiVariant:{{$activeTheme->isMultiVariant()?"true":"false"}}};</script>
     @if($activeTheme->hasJs())<script defer src="{{$activeTheme->jsUrl()}}"></script>@endif
     @endif
     {{-- END THEMES --}}
