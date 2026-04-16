@@ -68,6 +68,22 @@ div.item:hover {
     box-shadow: 0 8px 28px rgba(0,0,0,0.6), 0 0 8px var(--phosphor-glow, rgba(0,255,65,0.12)) !important;
     border-color: var(--phosphor-bright, #39FF14) !important;
 }
+/* Spark container */
+div.item .sparks { position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:2px; }
+div.item .sparks .spark {
+    position:absolute;
+    width:2px;height:2px;
+    border-radius:50%;
+    background:var(--phosphor, #00FF41);
+    box-shadow:0 0 4px var(--phosphor, #00FF41), 0 0 8px var(--phosphor, #00FF41);
+    opacity:0;
+    animation:sparkFly 0.6s ease-out forwards;
+}
+@keyframes sparkFly {
+    0% { opacity:1; transform:translate(0,0) scale(1); }
+    50% { opacity:0.8; }
+    100% { opacity:0; transform:translate(var(--sx),var(--sy)) scale(0.3); }
+}
 div.item .title {
     font-size: 1em !important;
     font-weight: 600;
