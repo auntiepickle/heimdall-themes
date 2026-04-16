@@ -38,16 +38,19 @@ if [ ! -L "$APP/public/storage" ]; then
     echo "[heimdall-themes] created storage symlink"
 fi
 
-# Clear legacy custom.js/custom.css — these were used before the theme engine.
-# Clear both the files AND the database values (stored per-user in pivot table).
-for f in /config/www/custom.js /config/www/custom.css; do
-    if [ -s "$f" ]; then
-        echo "[heimdall-themes] clearing legacy $f"
-        : > "$f"
-    fi
-done
-# Direct SQLite — bypasses all Laravel/tinker/shell escaping headaches
-s6-setuidgid abc php << 'EOPHP'
+# One-time migration: clear legacy custom.js/custom.css that predates the theme
+# engine. Only runs once — marker file prevents re-clearing on future restarts,
+# so any new customizations the user adds after migration are preserved.
+MIGRATED_MARKER="/config/.heimdall-themes-migrated"
+if [ ! -f "$MIGRATED_MARKER" ]; then
+    echo "[heimdall-themes] first run — migrating legacy custom JS/CSS"
+    for f in /config/www/custom.js /config/www/custom.css; do
+        if [ -s "$f" ]; then
+            echo "[heimdall-themes] clearing legacy $f"
+            : > "$f"
+        fi
+    done
+    s6-setuidgid abc php << 'EOPHP'
 <?php
 $dbPath = '/config/www/app.sqlite';
 if (!file_exists($dbPath)) { echo "[heimdall-themes] no DB found, skip\n"; exit(0); }
@@ -56,6 +59,11 @@ $db->exec("UPDATE settings SET value='' WHERE key IN ('custom_js','custom_css') 
 $r = $db->exec("UPDATE setting_user SET uservalue='' WHERE setting_id IN (SELECT id FROM settings WHERE key IN ('custom_js','custom_css')) AND uservalue!=''");
 echo "[heimdall-themes] cleared custom_js/custom_css from DB ($r user rows)\n";
 EOPHP
+    touch "$MIGRATED_MARKER"
+    echo "[heimdall-themes] migration complete, marker written"
+else
+    echo "[heimdall-themes] already migrated, skipping legacy clear"
+fi
 
 cd "$APP"
 s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
