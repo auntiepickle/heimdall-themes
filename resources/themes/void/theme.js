@@ -40,96 +40,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
             void main(){
                 vec2 uv=(gl_FragCoord.xy-u_resolution*0.5)/min(u_resolution.x,u_resolution.y);
+                vec2 rawUV=gl_FragCoord.xy/u_resolution;
                 float t=u_time;
                 vec2 mouse=(u_mouse-u_resolution*0.5)/min(u_resolution.x,u_resolution.y);
+                float aspect=u_resolution.x/u_resolution.y;
 
                 // Accent colors
                 vec3 accent;
-                vec3 accent2; // ghost counter-color for rim
+                vec3 accent2;
                 if(u_theme<0.5){accent=vec3(0.545,0.361,0.965);accent2=vec3(0.361,0.965,0.69);}
                 else if(u_theme<1.5){accent=vec3(1.0,0.176,0.333);accent2=vec3(0.176,0.8,0.6);}
                 else{accent=vec3(0.231,0.510,0.965);accent2=vec3(0.361,0.965,0.545);}
 
-                // Domain warping for organic feel
-                vec2 warp=vec2(fbm(uv*2.+t*0.06),fbm(uv*2.+t*0.06+5.))*0.08;
-                vec2 wuv=uv+warp;
+                // ---- BACKGROUND TEXTURE (always renders) ----
+                // Subtle noise texture on the black — makes it feel material, not void
+                float bgNoise=fbm(rawUV*8.+t*0.01)*0.025;
+                float bgNoise2=noise(rawUV*25.)*0.012;
+                vec3 bg=vec3(0.02+bgNoise+bgNoise2);
+                // Subtle gradient — slightly lighter top-left
+                bg+=vec3(0.015)*smoothstep(1.2,0.,length(rawUV-vec2(0.1,0.9)));
+                // Very faint accent wash in one corner
+                bg+=accent*0.008*smoothstep(0.8,0.,length(rawUV-vec2(0.85,0.15)));
 
-                // Noise displacement per blob
-                float n1=fbm(wuv*3.+t*0.08)*0.12;
-                float n2=fbm(wuv*2.5-t*0.07+3.)*0.10;
-                float n3=fbm(wuv*3.5+t*0.05+7.)*0.08;
+                // ---- BLOB (offset to upper-right, smaller) ----
+                vec2 blobOffset=vec2(0.28,-0.22); // upper-right
+                vec2 buv=uv-blobOffset;
 
-                // Mouse attraction
+                vec2 warp=vec2(fbm(buv*2.5+t*0.06),fbm(buv*2.5+t*0.06+5.))*0.06;
+                vec2 wuv=buv+warp;
+
+                float n1=fbm(wuv*3.+t*0.08)*0.08;
+                float n2=fbm(wuv*2.5-t*0.07+3.)*0.06;
+                float n3=fbm(wuv*3.5+t*0.05+7.)*0.05;
+
                 vec2 toMouse=mouse-uv;
                 float mDist=length(toMouse);
-                vec2 pull=toMouse*0.06/(0.4+mDist);
+                vec2 pull=blobOffset+toMouse*0.04/(0.5+mDist);
 
-                // Three orbiting metaballs merged with smin
+                // Smaller metaballs, tighter orbit
                 vec2 c1=pull;
-                vec2 c2=vec2(sin(t*0.19)*0.22,cos(t*0.23)*0.16);
-                vec2 c3=vec2(cos(t*0.17)*0.18,sin(t*0.29)*0.14);
+                vec2 c2=blobOffset+vec2(sin(t*0.19)*0.14,cos(t*0.23)*0.10);
+                vec2 c3=blobOffset+vec2(cos(t*0.17)*0.12,sin(t*0.29)*0.09);
 
-                float d1=sdCircle(wuv-c1,0.20+n1);
-                float d2=sdCircle(wuv-c2,0.13+n2);
-                float d3=sdCircle(wuv-c3,0.10+n3);
-                float d=smin(smin(d1,d2,0.18),d3,0.18);
+                float d1=sdCircle(wuv-(c1-blobOffset),0.12+n1);
+                float d2=sdCircle(wuv-(c2-blobOffset),0.08+n2);
+                float d3=sdCircle(wuv-(c3-blobOffset),0.06+n3);
+                float d=smin(smin(d1,d2,0.12),d3,0.12);
 
-                // Layers
                 float blob=smoothstep(0.02,-0.03,d);
-                float inner=smoothstep(0.08,-0.12,d);
-                float core=smoothstep(-0.02,-0.18,d);
-                float rim=smoothstep(-0.01,0.015,d)*smoothstep(0.04,-0.01,d);
+                float inner=smoothstep(0.06,-0.10,d);
+                float core=smoothstep(-0.02,-0.12,d);
+                float rim=smoothstep(-0.01,0.012,d)*smoothstep(0.03,-0.01,d);
 
-                // Fake metallic reflection via noise gradient
-                float nx=noise(wuv*8.+t*0.1+0.5)-noise(wuv*8.+t*0.1-0.5);
-                float ny=noise(wuv*8.+t*0.1+vec2(0.,0.5).y)-noise(wuv*8.+t*0.1-vec2(0.,0.5).y);
-                vec2 nrm=vec2(nx,ny)*4.;
+                float nnx=noise(wuv*8.+t*0.1+0.5)-noise(wuv*8.+t*0.1-0.5);
+                float nny=noise(wuv*8.+t*0.1+0.7)-noise(wuv*8.+t*0.1-0.3);
+                vec2 nrm=vec2(nnx,nny)*4.;
                 float refl=dot(normalize(vec3(nrm,1.)),normalize(vec3(mouse*2.,1.)));
-                refl=pow(max(refl,0.),3.)*0.3;
+                refl=pow(max(refl,0.),3.)*0.2;
 
-                // Color: dark mass with accent edge + ghost counter-color in rim
-                vec3 blobColor=vec3(0.02)*blob;
-                blobColor+=accent*0.15*inner;
-                blobColor+=vec3(refl)*inner*0.5;
-                blobColor+=accent*0.8*core*0.15;
-                blobColor+=mix(accent*1.2,accent2*0.5,0.3)*rim*0.35;
+                // Blob color — subtler than before
+                vec3 blobColor=vec3(0.015)*blob;
+                blobColor+=accent*0.10*inner;
+                blobColor+=vec3(refl)*inner*0.3;
+                blobColor+=accent*0.5*core*0.1;
+                blobColor+=mix(accent*0.9,accent2*0.4,0.3)*rim*0.25;
 
-                // Dot grid — warps near the metaballs
+                // ---- DOT GRID (full screen, warps near blob) ----
                 vec2 gridUV=uv;
-                // Gravitational warp: push grid points away from blob center
                 vec2 blobCenter=c1*0.5+c2*0.3+c3*0.2;
                 vec2 gDelta=gridUV-blobCenter;
                 float gDist=length(gDelta);
-                gridUV+=normalize(gDelta+0.001)*0.02/(gDist*gDist+0.08);
-                // Grid
-                float gridSpacing=0.06;
+                gridUV+=normalize(gDelta+0.001)*0.015/(gDist*gDist+0.1);
+                float gridSpacing=0.05;
                 vec2 gridPos=mod(gridUV+gridSpacing*0.5,gridSpacing)-gridSpacing*0.5;
-                float gridDot=smoothstep(0.003,0.001,length(gridPos));
-                float gridFade=smoothstep(0.8,0.3,length(uv)); // fade at edges
-                vec3 gridColor=accent*gridDot*0.08*gridFade*(1.-blob);
+                float gridDot=smoothstep(0.002,0.0008,length(gridPos));
+                float gridFade=smoothstep(0.9,0.2,length(uv));
+                vec3 gridColor=accent*gridDot*0.06*gridFade*(1.-blob*0.8);
 
-                // Horizontal scan line that sweeps slowly
-                float scanY=mod(t*0.03,2.)-1.;
-                float scanLine=smoothstep(0.003,0.,abs(uv.y-scanY))*0.06*(1.-blob);
-                vec3 scanColor=accent*scanLine;
+                // ---- HORIZONTAL SCAN LINES (texture) ----
+                float scanY=mod(t*0.025,2.)-1.;
+                float scanLine=smoothstep(0.003,0.,abs(uv.y-scanY))*0.04*(1.-blob);
+                float scanY2=mod(t*0.018+0.7,2.)-1.;
+                float scanLine2=smoothstep(0.002,0.,abs(uv.y-scanY2))*0.02*(1.-blob);
+                vec3 scanColor=accent*(scanLine+scanLine2);
 
-                // Ambient glow
-                float ambGlow=1./(1.+pow(length(uv)*3.5,2.5))*0.025;
+                // ---- AMBIENT ----
+                float ambGlow=1./(1.+pow(length(buv)*5.,2.))*0.015;
                 vec3 ambient=accent*ambGlow;
 
-                // Cursor ripple
-                float ripple=sin(mDist*25.-t*3.)*exp(-mDist*6.)*0.015*blob;
+                float ripple=sin(mDist*25.-t*3.)*exp(-mDist*6.)*0.01*blob;
 
-                // Chromatic aberration near blob edge
-                float caStr=rim*0.008;
+                float caStr=rim*0.006;
                 float rOff=smoothstep(0.02,-0.04,d+caStr);
                 float bOff=smoothstep(0.02,-0.04,d-caStr);
-                vec3 ca=vec3(rOff-blob,0.,bOff-blob)*accent*0.2;
+                vec3 ca=vec3(rOff-blob,0.,bOff-blob)*accent*0.15;
 
-                vec3 color=blobColor+ambient+ca+gridColor+scanColor+vec3(ripple);
-                float alpha=clamp(blob*0.95+rim*0.4+ambGlow*10.+gridDot*gridFade*0.3+scanLine*2.,0.,0.98);
-
-                gl_FragColor=vec4(clamp(color,0.,1.),alpha);
+                // ---- COMPOSE ----
+                vec3 color=bg+blobColor+ambient+ca+gridColor+scanColor+vec3(ripple);
+                gl_FragColor=vec4(clamp(color,0.,1.),1.);
             }
         `;
 
