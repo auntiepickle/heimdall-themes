@@ -94,6 +94,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 blobColor+=accent*0.8*core*0.15;
                 blobColor+=mix(accent*1.2,accent2*0.5,0.3)*rim*0.35;
 
+                // Dot grid — warps near the metaballs
+                vec2 gridUV=uv;
+                // Gravitational warp: push grid points away from blob center
+                vec2 blobCenter=c1*0.5+c2*0.3+c3*0.2;
+                vec2 gDelta=gridUV-blobCenter;
+                float gDist=length(gDelta);
+                gridUV+=normalize(gDelta+0.001)*0.02/(gDist*gDist+0.08);
+                // Grid
+                float gridSpacing=0.06;
+                vec2 gridPos=mod(gridUV+gridSpacing*0.5,gridSpacing)-gridSpacing*0.5;
+                float gridDot=smoothstep(0.003,0.001,length(gridPos));
+                float gridFade=smoothstep(0.8,0.3,length(uv)); // fade at edges
+                vec3 gridColor=accent*gridDot*0.08*gridFade*(1.-blob);
+
+                // Horizontal scan line that sweeps slowly
+                float scanY=mod(t*0.03,2.)-1.;
+                float scanLine=smoothstep(0.003,0.,abs(uv.y-scanY))*0.06*(1.-blob);
+                vec3 scanColor=accent*scanLine;
+
                 // Ambient glow
                 float ambGlow=1./(1.+pow(length(uv)*3.5,2.5))*0.025;
                 vec3 ambient=accent*ambGlow;
@@ -107,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 float bOff=smoothstep(0.02,-0.04,d-caStr);
                 vec3 ca=vec3(rOff-blob,0.,bOff-blob)*accent*0.2;
 
-                vec3 color=blobColor+ambient+ca+vec3(ripple);
-                float alpha=clamp(blob*0.95+rim*0.4+ambGlow*10.,0.,0.98);
+                vec3 color=blobColor+ambient+ca+gridColor+scanColor+vec3(ripple);
+                float alpha=clamp(blob*0.95+rim*0.4+ambGlow*10.+gridDot*gridFade*0.3+scanLine*2.,0.,0.98);
 
                 gl_FragColor=vec4(clamp(color,0.,1.),alpha);
             }
@@ -169,6 +188,135 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animateGrain);
     }
     animateGrain();
+
+    // ====================== PARTICLES + WAVEFORM ======================
+    const pCanvas=document.createElement('canvas');
+    pCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+    document.body.appendChild(pCanvas);
+    const pCtx=pCanvas.getContext('2d');
+
+    const particles=[];
+    for(let i=0;i<40;i++){
+        particles.push({
+            x:Math.random()*window.innerWidth,
+            y:Math.random()*window.innerHeight,
+            vx:(Math.random()-0.5)*0.3,
+            vy:(Math.random()-0.5)*0.3,
+            size:Math.random()*1.5+0.5,
+            opacity:Math.random()*0.3+0.05,
+            pulse:Math.random()*Math.PI*2,
+            pulseSpeed:Math.random()*0.015+0.005
+        });
+    }
+
+    function animateParticles(){
+        pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight;
+        const w=pCanvas.width,h=pCanvas.height;
+        const cx=w*0.5,cy=h*0.5;
+        const t=Date.now()/1000;
+        const accent=accentColors[currentTheme]||'#8b5cf6';
+
+        // Particles — drift + attract toward center
+        particles.forEach(p=>{
+            p.pulse+=p.pulseSpeed;
+            const bright=Math.sin(p.pulse)*0.3+0.7;
+
+            // Gentle attraction toward center (where blob is)
+            const dx=cx-p.x,dy=cy-p.y;
+            const dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist>50){
+                p.vx+=dx/dist*0.003;
+                p.vy+=dy/dist*0.003;
+            }else{
+                // Repel when too close
+                p.vx-=dx/dist*0.01;
+                p.vy-=dy/dist*0.01;
+            }
+
+            // Mouse repulsion
+            const mdx=mouseX-p.x,mdy=mouseY-p.y;
+            const mDist=Math.sqrt(mdx*mdx+mdy*mdy);
+            if(mDist<120){
+                p.vx-=mdx/mDist*0.08;
+                p.vy-=mdy/mDist*0.08;
+            }
+
+            // Damping + speed cap
+            p.vx*=0.995;p.vy*=0.995;
+            const spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+            if(spd>0.8){p.vx*=0.8/spd;p.vy*=0.8/spd;}
+
+            p.x+=p.vx;p.y+=p.vy;
+            // Wrap
+            if(p.x<-20)p.x=w+20;if(p.x>w+20)p.x=-20;
+            if(p.y<-20)p.y=h+20;if(p.y>h+20)p.y=-20;
+
+            // Draw
+            pCtx.beginPath();
+            pCtx.arc(p.x,p.y,p.size*bright,0,Math.PI*2);
+            pCtx.fillStyle=accent;
+            pCtx.globalAlpha=p.opacity*bright;
+            pCtx.fill();
+        });
+
+        // Connection lines between nearby particles
+        pCtx.globalAlpha=1;
+        for(let i=0;i<particles.length;i++){
+            for(let j=i+1;j<particles.length;j++){
+                const dx=particles[i].x-particles[j].x;
+                const dy=particles[i].y-particles[j].y;
+                const dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist<120){
+                    pCtx.beginPath();
+                    pCtx.moveTo(particles[i].x,particles[i].y);
+                    pCtx.lineTo(particles[j].x,particles[j].y);
+                    pCtx.strokeStyle=accent;
+                    pCtx.globalAlpha=(1-dist/120)*0.04;
+                    pCtx.lineWidth=0.5;
+                    pCtx.stroke();
+                }
+            }
+        }
+
+        // Waveform at bottom — minimal techno oscilloscope
+        pCtx.globalAlpha=1;
+        const waveY=h*0.92;
+        pCtx.beginPath();
+        for(let x=0;x<w;x+=2){
+            const nx=x/w;
+            const wave=Math.sin(nx*12+t*0.8)*4
+                      +Math.sin(nx*24-t*1.2)*2
+                      +Math.sin(nx*48+t*2.0)*1
+                      +(Math.random()-0.5)*0.5;
+            const y=waveY+wave;
+            if(x===0)pCtx.moveTo(x,y);
+            else pCtx.lineTo(x,y);
+        }
+        pCtx.strokeStyle=accent;
+        pCtx.globalAlpha=0.12;
+        pCtx.lineWidth=1;
+        pCtx.stroke();
+
+        // Second waveform — slightly offset, thinner
+        pCtx.beginPath();
+        for(let x=0;x<w;x+=2){
+            const nx=x/w;
+            const wave=Math.sin(nx*8-t*0.6)*3
+                      +Math.sin(nx*32+t*1.5)*1.5
+                      +(Math.random()-0.5)*0.3;
+            const y=waveY+wave+8;
+            if(x===0)pCtx.moveTo(x,y);
+            else pCtx.lineTo(x,y);
+        }
+        pCtx.strokeStyle=accent;
+        pCtx.globalAlpha=0.06;
+        pCtx.lineWidth=0.5;
+        pCtx.stroke();
+
+        pCtx.globalAlpha=1;
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
 
     // ====================== CLOCK — ultra minimal ======================
     const isHomePage=!(/settings|items|users|tags/.test(window.location.pathname));
