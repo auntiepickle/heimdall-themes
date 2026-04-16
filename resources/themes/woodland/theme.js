@@ -63,9 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 vec3 sky=mix(skyBot,skyTop,pow(uv.y,0.7));
 
                 // Layered volumetric fog — 3 layers at different depths
-                float fog1=fbm(uv*2.5+vec2(t*0.012,t*0.008))*fogDensity;
-                float fog2=fbm(uv*4.+vec2(-t*0.018,t*0.006)+3.)*fogDensity*0.6;
-                float fog3=fbm(uv*1.5+vec2(t*0.006,-t*0.004)+7.)*fogDensity*0.4;
+                // Mouse parallax offset
+                vec2 mOff=(mouse-0.5)*0.03;
+                float fog1=fbm(uv*2.5+mOff+vec2(t*0.004,t*0.003))*fogDensity;
+                float fog2=fbm(uv*4.+mOff*1.5+vec2(-t*0.006,t*0.002)+3.)*fogDensity*0.6;
+                float fog3=fbm(uv*1.5+mOff*0.5+vec2(t*0.002,-t*0.001)+7.)*fogDensity*0.4;
                 vec3 fogAll=fogColor*fog1+deepFog*fog2+fogColor*fog3*0.5;
 
                 // Ground moss/undergrowth — denser green at bottom
@@ -79,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     float fi=float(i);
                     float tx=hash(vec2(fi*5.7,fi*3.2))*1.4-0.2;
                     float depth=0.3+fi*0.1;
-                    float sway=sin(t*0.08+fi*1.5)*0.008*depth;
+                    float sway=sin(t*0.025+fi*1.5)*0.005*depth;
                     vec2 tp=vec2(uv.x-tx+sway,1.-uv.y);
                     float scale=0.6+fi*0.15;
                     float tree=treeSil(tp*vec2(1./scale,1./scale),fi*7.);
@@ -88,15 +90,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 trees=min(trees,0.5);
 
                 // Canopy shadow — dark patches from above
-                float canopy=fbm(vec2(uv.x*3.+t*0.005,uv.y*1.5))*canopyDark;
+                float canopy=fbm(vec2(uv.x*3.+t*0.002,uv.y*1.5))*canopyDark;
                 canopy*=smoothstep(0.5,0.,uv.y);
 
                 // Light rays — 5 beams filtering through canopy gaps
                 float rays=0.;
                 for(int i=0;i<5;i++){
                     float fi=float(i);
-                    float rx=0.15+fi*0.18+sin(t*0.04+fi*1.1)*0.04+sin(t*0.11+fi*3.7)*0.015+sin(t*0.023+fi*0.8)*0.01;
-                    float width=0.04+sin(t*0.06+fi*2.)*0.015+sin(t*0.017+fi*1.3)*0.008;
+                    float rx=0.15+fi*0.18+sin(t*0.012+fi*1.1)*0.03+sin(t*0.005+fi*3.7)*0.01+sin(t*0.008+fi*0.8)*0.006;
+                    float width=0.04+sin(t*0.015+fi*2.)*0.01+sin(t*0.006+fi*1.3)*0.005;
                     float ray=smoothstep(width,0.,abs(uv.x-rx));
                     ray*=smoothstep(1.,0.15,uv.y);
                     ray*=(1.-canopy*2.);

@@ -228,8 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight;
+    window.addEventListener('resize',()=>{pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight;});
     function animateParticles(){
-        pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight;
         const w=pCanvas.width,h=pCanvas.height;
         const cx=w*0.5,cy=h*0.5;
         const t=Date.now()/1000;
