@@ -38,8 +38,8 @@
                 </div>
             </button>
         </form>
-        {{-- Themes --}}
-        @foreach($themes as $theme)
+        {{-- Stable Themes --}}
+        @foreach($themes->filter(fn($t)=>!$t->alpha) as $theme)
         @php
             $previewStyles = [
                 'lofi-night' => 'background:linear-gradient(135deg,#1e2a45 0%,#0a0a14 60%,#2d1b69 100%);',
@@ -75,6 +75,38 @@
         </form>
         @endforeach
     </div>
+    @if($themes->filter(fn($t)=>$t->alpha)->count() > 0)
+    <h3 style="font-weight:700;color:rgba(255,255,255,.4);margin-top:1.2rem;margin-bottom:.5rem;font-size:1rem;">Experimental</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem;">
+        @foreach($themes->filter(fn($t)=>$t->alpha) as $theme)
+        @php
+            $previewStyles = [
+                'void' => 'background:#0a0a0a;',
+                'rivendell' => 'background:linear-gradient(135deg,#1a150e 0%,#4a3520 30%,#29446a 70%,#0a0a14 100%);',
+            ];
+            $previewIcons = [
+                'void' => '&#9679;',
+                'rivendell' => '&#127964;',
+            ];
+            $pStyle = $previewStyles[$theme->slug] ?? 'background:#1a1a1a;';
+            $pIcon = $previewIcons[$theme->slug] ?? '&#127912;';
+        @endphp
+        <form method="POST" action="{{ route('settings.themes.update') }}" style="margin:0;">
+            @csrf
+            <input type="hidden" name="theme_name" value="{{ $theme->slug }}">
+            <button type="submit" class="tc tc-alpha {{ $activeSlug===$theme->slug?'ta':'' }}" style="width:100%;text-align:left;cursor:pointer;border:none;padding:0;">
+                <div class="tc-preview" style="{{ $pStyle }}">
+                    <span style="font-size:1.8rem;">{!! $pIcon !!}</span>
+                </div>
+                <div class="tc-info">
+                    <div class="tc-name">{{ $theme->name }} <span style="font-size:.6rem;color:rgba(255,255,255,.25);font-weight:500;">ALPHA</span></div>
+                    <div class="tc-desc">{{ Str::limit($theme->description, 40) }}</div>
+                </div>
+            </button>
+        </form>
+        @endforeach
+    </div>
+    @endif
 </div>
 <style>
 .tc{border-radius:12px;overflow:hidden;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);backdrop-filter:blur(12px);transition:all .2s ease;display:block;}
@@ -84,5 +116,7 @@
 .tc-info{padding:.6rem .7rem;}
 .tc-name{font-weight:700;color:#fff;font-size:.9rem;}
 .tc-desc{font-size:.7rem;color:rgba(255,255,255,.45);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tc-alpha{opacity:.6;border-style:dashed!important;}
+.tc-alpha:hover{opacity:.85;}
 </style>
 @endsection

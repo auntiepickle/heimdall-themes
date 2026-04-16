@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
 
     // ====================== CLOCK ======================
-    const isHomePage = !(/settings|items|users|tags/.test(window.location.pathname));
+    const isHomePage = true;
     const clockContainer = document.createElement('div');
     clockContainer.id = 'clock-container';
     clockContainer.style.display = isHomePage ? 'block' : 'none';
@@ -476,10 +476,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const _push = history.pushState.bind(history);
     history.pushState = function(...a){
         _push(...a);
-        clockContainer.style.display=/settings|items|users|tags/.test(a[2]||window.location.pathname)?'none':'block';
+        clockContainer.style.display='block';
     };
     window.addEventListener('popstate',()=>{
-        clockContainer.style.display=/settings|items|users|tags/.test(window.location.pathname)?'none':'block';
+        clockContainer.style.display='block';
     });
 
     // ---- DAY CLOCK: Paper & Ink ----
@@ -676,9 +676,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function spawnRaindrop(w, h) {
         return { type:'rain', x: Math.random()*w, y: -10,
-            len: Math.random()*18+8, speed: Math.random()*4+6,
-            drift: Math.random()*0.8-0.4,
-            opacity: Math.random()*0.15+0.05 };
+            len: Math.random()*30+15, speed: Math.random()*5+7,
+            drift: Math.random()*1.0-0.5,
+            opacity: Math.random()*0.25+0.10 };
     }
 
     // Rain triggers randomly. ~30% chance per theme switch. Lasts until next switch.
@@ -686,17 +686,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initParticles(theme, w, h) {
         particles = [];
-        isRaining = Math.random() < 0.3;
+        isRaining = Math.random() < 0.5;
         const m=isMobile?0.4:1;
         if (theme==='day') {
             for(let i=0;i<Math.floor(28*m);i++){ const p=spawnLeaf(w,h); p.y=Math.random()*h; particles.push(p); }
-            if (isRaining) for(let i=0;i<Math.floor(60*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
+            if (isRaining) for(let i=0;i<Math.floor(90*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         } else if (theme==='evening') {
             for(let i=0;i<Math.floor(45*m);i++){ const p=spawnEmber(w,h); p.y=Math.random()*h+h*0.3; p.life=Math.random(); particles.push(p); }
-            if (isRaining) for(let i=0;i<Math.floor(80*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
+            if (isRaining) for(let i=0;i<Math.floor(120*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         } else {
             for(let i=0;i<Math.floor(35*m);i++) particles.push(spawnFirefly(w,h));
-            if (isRaining) for(let i=0;i<Math.floor(50*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
+            if (isRaining) for(let i=0;i<Math.floor(80*m);i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         }
     }
 
@@ -790,7 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p.x+p.drift*2, p.y+p.len);
                 ctx.strokeStyle=`rgba(180,200,220,${p.opacity*particleRamp})`;
-                ctx.lineWidth=0.8;
+                ctx.lineWidth=1.2;
                 ctx.lineCap='round';
                 ctx.stroke();
                 p.x+=p.drift; p.y+=p.speed;

@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ====================== CLOCK ======================
-    const isHomePage=!(/settings|items|users|tags/.test(window.location.pathname));
+    const isHomePage=true;
     const clockContainer=document.createElement('div');
     clockContainer.id='clock-container';
     clockContainer.style.display=isHomePage?'block':'none';
@@ -308,9 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const _push=history.pushState.bind(history);
     history.pushState=function(...a){_push(...a);
-        clockContainer.style.display=/settings|items|users|tags/.test(a[2]||window.location.pathname)?'none':'block';};
+        clockContainer.style.display='block';};
     window.addEventListener('popstate',()=>{
-        clockContainer.style.display=/settings|items|users|tags/.test(window.location.pathname)?'none':'block';});
+        clockContainer.style.display='block';});
 
     function drawClock(){
         const W=90,cx=45,cy=45,r=40;
