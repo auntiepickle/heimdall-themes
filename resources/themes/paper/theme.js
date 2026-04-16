@@ -30,65 +30,104 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             float fbm(vec2 p){float v=0.,a=0.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.1;a*=0.5;}return v;}
 
+            // Tree silhouette shape
+            float treeSil(vec2 p, float seed){
+                float trunk=smoothstep(0.015,0.,abs(p.x))*smoothstep(0.,0.15,p.y);
+                float canopy=smoothstep(0.12+fbm(p*8.+seed)*0.06,0.,length(p-vec2(0.,0.18)));
+                return max(trunk,canopy);
+            }
+
             void main(){
                 vec2 uv=gl_FragCoord.xy/u_resolution;uv.y=1.-uv.y;
                 float t=u_time;
                 vec2 mouse=u_mouse/u_resolution;mouse.y=1.-mouse.y;
 
-                vec3 skyTop,skyBot,fogColor;
-                float fogDensity;
+                vec3 skyTop,skyBot,fogColor,deepFog;
+                float fogDensity,canopyDark;
 
                 if(u_theme<0.5){
-                    // Day: warm sunlit forest
-                    skyTop=vec3(0.45,0.65,0.35);skyBot=vec3(0.85,0.88,0.72);
-                    fogColor=vec3(0.92,0.90,0.78);fogDensity=0.15;
+                    skyTop=vec3(0.25,0.50,0.22);skyBot=vec3(0.65,0.72,0.48);
+                    fogColor=vec3(0.82,0.80,0.65);deepFog=vec3(0.35,0.50,0.28);
+                    fogDensity=0.20;canopyDark=0.15;
                 }else if(u_theme<1.5){
-                    // Evening: golden hour
-                    skyTop=vec3(0.55,0.35,0.15);skyBot=vec3(0.85,0.65,0.35);
-                    fogColor=vec3(0.75,0.55,0.3);fogDensity=0.25;
+                    skyTop=vec3(0.45,0.25,0.08);skyBot=vec3(0.70,0.45,0.18);
+                    fogColor=vec3(0.65,0.42,0.18);deepFog=vec3(0.35,0.22,0.08);
+                    fogDensity=0.30;canopyDark=0.25;
                 }else{
-                    // Night: moonlit forest
-                    skyTop=vec3(0.04,0.08,0.06);skyBot=vec3(0.08,0.15,0.1);
-                    fogColor=vec3(0.06,0.12,0.08);fogDensity=0.3;
+                    skyTop=vec3(0.02,0.05,0.04);skyBot=vec3(0.05,0.10,0.07);
+                    fogColor=vec3(0.04,0.08,0.05);deepFog=vec3(0.02,0.06,0.03);
+                    fogDensity=0.35;canopyDark=0.40;
                 }
 
-                // Sky gradient
-                vec3 sky=mix(skyBot,skyTop,uv.y);
+                // Sky gradient — deeper at bottom (under canopy)
+                vec3 sky=mix(skyBot,skyTop,pow(uv.y,0.7));
 
-                // Soft volumetric fog
-                float fog=fbm(uv*3.+vec2(t*0.015,t*0.01))*fogDensity;
-                float fog2=fbm(uv*2.+vec2(-t*0.02,t*0.008))*fogDensity*0.7;
+                // Layered volumetric fog — 3 layers at different depths
+                float fog1=fbm(uv*2.5+vec2(t*0.012,t*0.008))*fogDensity;
+                float fog2=fbm(uv*4.+vec2(-t*0.018,t*0.006)+3.)*fogDensity*0.6;
+                float fog3=fbm(uv*1.5+vec2(t*0.006,-t*0.004)+7.)*fogDensity*0.4;
+                vec3 fogAll=fogColor*fog1+deepFog*fog2+fogColor*fog3*0.5;
 
-                // Light rays from above
-                float rays=0.;
-                for(int i=0;i<3;i++){
+                // Ground moss/undergrowth — denser green at bottom
+                float ground=smoothstep(0.6,1.,uv.y)*0.12;
+                vec3 moss=vec3(0.12,0.22,0.08)*ground;
+                moss+=vec3(0.08,0.15,0.05)*fbm(uv*6.+1.)*ground;
+
+                // Tree silhouettes — layered at different depths
+                float trees=0.;
+                for(int i=0;i<6;i++){
                     float fi=float(i);
-                    float rx=0.3+fi*0.2+sin(t*0.05+fi)*0.05;
-                    float ray=smoothstep(0.08,0.,abs(uv.x-rx))*smoothstep(1.,0.3,uv.y);
-                    rays+=ray*0.08;
+                    float tx=hash(vec2(fi*5.7,fi*3.2))*1.4-0.2;
+                    float depth=0.3+fi*0.1;
+                    float sway=sin(t*0.08+fi*1.5)*0.008*depth;
+                    vec2 tp=vec2(uv.x-tx+sway,1.-uv.y);
+                    float scale=0.6+fi*0.15;
+                    float tree=treeSil(tp*vec2(1./scale,1./scale),fi*7.);
+                    trees+=tree*depth*canopyDark;
+                }
+                trees=min(trees,0.5);
+
+                // Canopy shadow — dark patches from above
+                float canopy=fbm(vec2(uv.x*3.+t*0.005,uv.y*1.5))*canopyDark;
+                canopy*=smoothstep(0.5,0.,uv.y);
+
+                // Light rays — 5 beams filtering through canopy gaps
+                float rays=0.;
+                for(int i=0;i<5;i++){
+                    float fi=float(i);
+                    float rx=0.15+fi*0.18+sin(t*0.04+fi*1.1)*0.04;
+                    float width=0.04+sin(t*0.06+fi*2.)*0.015;
+                    float ray=smoothstep(width,0.,abs(uv.x-rx));
+                    ray*=smoothstep(1.,0.15,uv.y);
+                    ray*=(1.-canopy*2.);
+                    rays+=ray*0.06;
                 }
                 vec3 rayCol=(u_theme<0.5)?vec3(1.,0.95,0.7):
-                            (u_theme<1.5)?vec3(1.,0.7,0.3):vec3(0.4,0.6,0.5);
+                            (u_theme<1.5)?vec3(1.,0.7,0.3):vec3(0.3,0.5,0.4);
 
-                // Mouse warmth
+                // Mouse warmth — like a lantern glow
                 float mdist=length(uv-mouse);
-                float warmth=1./(1.+pow(mdist*4.,2.))*0.1;
-                vec3 warmCol=(u_theme<1.5)?vec3(1.,0.9,0.6):vec3(0.3,0.5,0.4);
+                float warmth=1./(1.+pow(mdist*3.5,2.))*0.12;
+                vec3 warmCol=(u_theme<1.5)?vec3(1.,0.85,0.5):vec3(0.25,0.5,0.35);
 
-                // Firefly spots at night
+                // Fireflies at night — more of them, in the shader too
                 float fireflies=0.;
                 if(u_theme>1.5){
-                    for(int i=0;i<8;i++){
+                    for(int i=0;i<15;i++){
                         float fi=float(i);
                         vec2 fp=vec2(hash(vec2(fi*3.7,fi*11.3)),hash(vec2(fi*7.1,fi*5.9)));
-                        fp+=vec2(sin(t*0.3+fi*2.),cos(t*0.25+fi*1.5))*0.05;
-                        float pulse=sin(t*1.5+fi*2.3)*0.4+0.6;
-                        fireflies+=smoothstep(0.025,0.,length(uv-fp))*pulse*0.3;
+                        fp+=vec2(sin(t*0.25+fi*1.7),cos(t*0.2+fi*1.3))*0.06;
+                        float pulse=sin(t*1.2+fi*2.3)*0.4+0.6;
+                        float glow=smoothstep(0.03,0.,length(uv-fp))*pulse;
+                        fireflies+=glow*0.2;
                     }
                 }
 
-                vec3 color=sky+fogColor*(fog+fog2)+rayCol*rays+warmCol*warmth;
-                if(u_theme>1.5) color+=vec3(0.5,0.8,0.3)*fireflies;
+                // Compose
+                vec3 color=sky+fogAll+moss+rayCol*rays+warmCol*warmth;
+                color-=vec3(trees)*0.5;
+                color-=vec3(canopy)*0.3;
+                if(u_theme>1.5) color+=vec3(0.45,0.75,0.25)*fireflies;
                 gl_FragColor=vec4(clamp(color,0.,1.),1.);
             }
         `;
