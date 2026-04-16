@@ -46,15 +46,15 @@ for f in /config/www/custom.js /config/www/custom.css; do
         : > "$f"
     fi
 done
-s6-setuidgid abc php artisan tinker --execute="
-    \$keys = ['custom_js','custom_css'];
-    foreach (\$keys as \$k) {
-        \$s = \App\Setting::where('key', \$k)->first();
-        if (\$s && \$s->value) { \$s->value = ''; \$s->save(); }
-        if (\$s) { \DB::table('setting_user')->where('setting_id', \$s->id)->update(['uservalue' => '']); }
-    }
-    echo '[heimdall-themes] cleared custom_js/custom_css from DB';
-" 2>&1 || echo "[heimdall-themes] DB clear skipped (non-fatal)"
+s6-setuidgid abc php artisan tinker --execute='
+$keys = ["custom_js","custom_css"];
+foreach ($keys as $k) {
+    $s = \App\Setting::where("key", $k)->first();
+    if ($s && $s->value) { $s->value = ""; $s->save(); }
+    if ($s) { \DB::table("setting_user")->where("setting_id", $s->id)->update(["uservalue" => ""]); }
+}
+echo "[heimdall-themes] cleared custom_js/custom_css from DB";
+' 2>&1 || echo "[heimdall-themes] DB clear skipped (non-fatal)"
 
 cd "$APP"
 s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
