@@ -75,7 +75,7 @@
     @php
         $activeTheme = null;
         try {
-            $themeName = \App\Setting::fetch('theme_name');
+            $themeName = \App\Http\Controllers\ThemeController::getThemeName();
             if ($themeName) { $activeTheme = \App\Models\Theme::find($themeName); }
         } catch (\Exception $e) {}
     @endphp

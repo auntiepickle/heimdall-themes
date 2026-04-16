@@ -32,7 +32,7 @@ class ThemeController extends Controller {
         $setting->value = $slug;
         $setting->save();
 
-        return redirect()->route("dash")->with("success", $slug === '__random__' ? "Random mode." : ($slug ? "Theme applied." : "Theme removed."));
+        return redirect()->route("settings.themes")->with("success", $slug === '__random__' ? "Random mode." : ($slug ? "Theme applied." : "Theme removed."));
     }
 
     public function preview(string $slug) {
