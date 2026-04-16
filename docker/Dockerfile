@@ -23,9 +23,7 @@ COPY resources/themes/                               ${STAGE}/resources/themes/
 COPY resources/themes/                               ${STAGE}/public/themes/
 
 # Overlay: container-pinned patched versions of upstream files
-COPY docker/overlay/routes/web.php                   ${STAGE}/routes/web.php
-COPY docker/overlay/resources/views/layouts/app.blade.php \
-     ${STAGE}/resources/views/layouts/app.blade.php
+COPY docker/overlay/                                 ${STAGE}/
 
 # Init hook — runs after linuxserver populates /app/www
 COPY docker/init/01-heimdall-themes                  /custom-cont-init.d/01-heimdall-themes
