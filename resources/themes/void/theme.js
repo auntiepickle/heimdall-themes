@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Smaller metaballs, tighter orbit
                 vec2 c1=pull;
-                vec2 c2=blobOffset+vec2(sin(t*0.19)*0.14,cos(t*0.23)*0.10);
-                vec2 c3=blobOffset+vec2(cos(t*0.17)*0.12,sin(t*0.29)*0.09);
+                vec2 c2=blobOffset+vec2(sin(t*(0.19+sin(t*0.007)*0.03))*0.14,cos(t*0.23)*0.10);
+                vec2 c3=blobOffset+vec2(cos(t*(0.17+sin(t*0.005)*0.02))*0.12,sin(t*0.29)*0.09);
 
                 float d1=sdCircle(wuv-(c1-blobOffset),0.12+n1);
                 float d2=sdCircle(wuv-(c2-blobOffset),0.08+n2);
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 vec3 gridColor=accent*gridDot*0.06*gridFade*(1.-blob*0.8);
 
                 // ---- HORIZONTAL SCAN LINES (texture) ----
-                float scanY=mod(t*0.025,2.)-1.;
+                float scanY=mod(t*0.025+sin(t*0.003)*0.008,2.)-1.;
                 float scanLine=smoothstep(0.003,0.,abs(uv.y-scanY))*0.04*(1.-blob);
                 float scanY2=mod(t*0.018+0.7,2.)-1.;
                 float scanLine2=smoothstep(0.002,0.,abs(uv.y-scanY2))*0.02*(1.-blob);
@@ -178,24 +178,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ====================== GRAIN + SCANLINE ======================
     const grainCanvas=document.createElement('canvas');
-    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:overlay;opacity:0.35;';
+    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:overlay;opacity:0.45;';
     document.body.appendChild(grainCanvas);
     const gCtx=grainCanvas.getContext('2d');
     let grainW=0,grainH=0;
 
+    let grainFrame=0;
     function animateGrain(){
         if(grainCanvas.width!==window.innerWidth||grainCanvas.height!==window.innerHeight){
             grainCanvas.width=window.innerWidth;grainCanvas.height=window.innerHeight;
             grainW=grainCanvas.width;grainH=grainCanvas.height;
         }
+        grainFrame++;
+        if(grainFrame%2!==0){requestAnimationFrame(animateGrain);return;}
         const imgData=gCtx.createImageData(grainW,grainH);
         const d=imgData.data;
-        for(let i=0;i<d.length;i+=16){
-            const v=Math.random()*255;
-            d[i]=d[i+1]=d[i+2]=v;d[i+3]=18;
-            d[i+4]=d[i+5]=d[i+6]=v;d[i+7]=18;
-            d[i+8]=d[i+9]=d[i+10]=v;d[i+11]=18;
-            d[i+12]=d[i+13]=d[i+14]=v;d[i+15]=18;
+        for(let i=0;i<d.length;i+=4){
+            const fine=(Math.random()-0.5)*2;
+            const g=fine*42;
+            d[i]=128+g*1.10;d[i+1]=128+g*1.03;d[i+2]=128+g*0.88;
+            d[i+3]=12+Math.floor(Math.random()*14);
         }
         gCtx.putImageData(imgData,0,0);
         requestAnimationFrame(animateGrain);

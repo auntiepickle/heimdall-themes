@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 float rays=0.;
                 for(int i=0;i<5;i++){
                     float fi=float(i);
-                    float rx=0.15+fi*0.18+sin(t*0.04+fi*1.1)*0.04;
-                    float width=0.04+sin(t*0.06+fi*2.)*0.015;
+                    float rx=0.15+fi*0.18+sin(t*0.04+fi*1.1)*0.04+sin(t*0.11+fi*3.7)*0.015+sin(t*0.023+fi*0.8)*0.01;
+                    float width=0.04+sin(t*0.06+fi*2.)*0.015+sin(t*0.017+fi*1.3)*0.008;
                     float ray=smoothstep(width,0.,abs(uv.x-rx));
                     ray*=smoothstep(1.,0.15,uv.y);
                     ray*=(1.-canopy*2.);
@@ -126,9 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Retrowave pink flashes. Rare, brief, organic.
                 float pinkFlash=0.;
                 float flashPhase=floor(t*0.2);
-                if(hash(vec2(flashPhase,3.7))>0.7){
+                if(hash(vec2(flashPhase,3.7))>0.82){
                     float age=fract(t*0.2);
-                    float burst=exp(-age*4.)*0.15;
+                    float burst=exp(-age*5.)*0.08;
                     vec2 center=vec2(hash(vec2(flashPhase,1.2)),hash(vec2(flashPhase,5.8)));
                     float dist=length(uv-center);
                     pinkFlash=burst*smoothstep(0.4,0.,dist);
@@ -140,6 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 color-=vec3(trees)*0.5;
                 color-=vec3(canopy)*0.3;
                 if(u_theme>1.5) color+=vec3(0.45,0.75,0.25)*fireflies;
+                // Organic 8mm grain -- earthy warm, chunky
+                float tf=floor(u_time*20.);float bl=fract(u_time*20.);bl=bl*bl*(3.-2.*bl);
+                float gA=fract(sin(dot(gl_FragCoord.xy+tf,vec2(127.1,311.7)))*43758.5453);
+                float gB=fract(sin(dot(gl_FragCoord.xy+tf+1.,vec2(127.1,311.7)))*43758.5453);
+                float grainRaw=(mix(gA,gB,bl)-0.5)*2.;
+                float luma=dot(color,vec3(0.299,0.587,0.114));
+                vec2 clumpUV=floor(gl_FragCoord.xy/4.);
+                float cA=fract(sin(dot(clumpUV+tf,vec2(127.1,311.7)))*43758.5453);
+                float cB=fract(sin(dot(clumpUV+tf+1.,vec2(127.1,311.7)))*43758.5453);
+                float wCoarse=(mix(cA,cB,bl)-0.5)*2.;
+                float wFine=grainRaw*mix(0.09,0.03,luma);
+                float wClump=wCoarse*mix(0.07,0.02,luma)*(0.7+0.3*sin(u_time*0.13));
+                float wGrain=(wFine+wClump)*(0.88+0.12*sin(u_time*0.19));
+                color+=vec3(wGrain*1.14,wGrain*1.05,wGrain*0.85);
                 gl_FragColor=vec4(clamp(color,0.,1.),1.);
             }
         `;

@@ -58,10 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     float fi=float(i);
                     vec2 sp=vec2(hash(vec2(fi*3.1,fi*7.4)),hash(vec2(fi*5.3,fi*2.9)));
                     float twinkle=sin(t*(0.6+fi*0.15)+fi*2.1)*0.4+0.6;
-                    float sz=hash(vec2(fi*1.7,fi*4.2))*0.008+0.008;
+                    float sz=hash(vec2(fi*1.7,fi*4.2))*0.005+0.003;
                     stars+=smoothstep(sz,0.,length(uv-sp))*twinkle;
                 }
-                vec3 starCol=vec3(0.85,0.92,1.)*stars*0.7;
+                vec3 starCol=vec3(0.85,0.92,1.)*stars*0.45;
 
                 // Aurora ribbons — 6 layers with vivid color spectrum
                 vec3 auroraCol=vec3(0);
@@ -102,12 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Mouse bio-glow
                 float mdist=length(uv-mouse);
                 float bioFalloff=1./(1.+pow(mdist*5.,1.8));
-                vec3 bioCol=vec3(0.1,0.9,0.8)*bioFalloff*0.2;
+                vec3 bioCol=vec3(0.1,0.9,0.8)*bioFalloff*0.08;
 
                 // Shooting star (occasional)
                 float shootStar=0.;
-                float shootPhase=floor(t*0.15);
-                if(hash1(shootPhase)>0.6){
+                float shootPhase=floor(t*0.15+hash1(floor(t*0.03))*0.4);
+                if(hash1(shootPhase)>0.65){
                     float age=fract(t*0.15);
                     vec2 sStart=vec2(hash1(shootPhase+1.),hash1(shootPhase+2.)*0.4);
                     vec2 sEnd=sStart+vec2(0.3,-0.15);
@@ -118,6 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 vec3 shootCol=vec3(0.9,0.95,1.)*shootStar;
 
                 vec3 color=bgCol+starCol+auroraCol+nebCol+bioCol+shootCol;
+                // Frost grain -- cold blue-silver bias
+                float tf=floor(u_time*18.);float bl=fract(u_time*18.);bl=bl*bl*(3.-2.*bl);
+                float gA=fract(sin(dot(gl_FragCoord.xy+tf,vec2(127.1,311.7)))*43758.5453);
+                float gB=fract(sin(dot(gl_FragCoord.xy+tf+1.,vec2(127.1,311.7)))*43758.5453);
+                float grainRaw=(mix(gA,gB,bl)-0.5)*2.;
+                float luma=dot(color,vec3(0.299,0.587,0.114));
+                float fGrain=grainRaw*mix(0.07,0.025,luma)*(0.9+0.1*sin(u_time*0.17));
+                color+=vec3(fGrain*0.94,fGrain*1.0,fGrain*1.12);
                 float alpha=clamp(0.15+stars*0.4+auroraTotal*0.8+neb1+neb2+bioFalloff*0.3+shootStar,0.,0.98);
                 gl_FragColor=vec4(clamp(color,0.,1.),alpha);
             }

@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         columns = Math.floor(canvas.width / fontSize);
-        drops = Array.from({length: columns}, () => Math.random() * -100);
+        drops = Array.from({length: columns}, () => ({y: Math.random() * -100, speed: 0.5 + Math.random() * 0.8}));
     }
     initRain();
     window.addEventListener('resize', initRain);
@@ -50,33 +50,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < columns; i++) {
             if (Math.random() > rainDensity) continue;
+            const d = drops[i];
             const char = chars[Math.floor(Math.random() * chars.length)];
             const x = i * fontSize;
-            const y = drops[i] * fontSize;
+            const y = d.y * fontSize;
 
-            // Bright head character
             ctx.fillStyle = rainColor;
             ctx.globalAlpha = 0.9;
             ctx.shadowBlur = 8;
             ctx.shadowColor = rainColor;
             ctx.fillText(char, x, y);
 
-            // Dimmer trailing character
-            if (drops[i] > 1) {
+            if (d.y > 1) {
                 const trailChar = chars[Math.floor(Math.random() * chars.length)];
                 ctx.fillStyle = rainColorDim;
                 ctx.globalAlpha = 0.5;
                 ctx.shadowBlur = 0;
-                ctx.fillText(trailChar, x, (drops[i] - 1) * fontSize);
+                ctx.fillText(trailChar, x, (d.y - 1) * fontSize);
             }
 
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
 
             if (y > canvas.height && Math.random() > 0.975) {
-                drops[i] = 0;
+                d.y = 0;
+                d.speed = 0.5 + Math.random() * 0.8;
             }
-            drops[i]++;
+            d.y += d.speed;
+        }
+
+        // CRT phosphor grain
+        for(let j=0;j<50;j++){
+            ctx.fillStyle='rgba('+Math.floor(Math.random()*30)+','+Math.floor(Math.random()*20)+',0,'+(0.02+Math.random()*0.02)+')';
+            ctx.fillRect(Math.random()*canvas.width,Math.random()*canvas.height,2,1);
         }
         requestAnimationFrame(animateRain);
     }
@@ -142,10 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const flickerStyle = document.createElement('style');
     flickerStyle.textContent = `
         @keyframes crtFlicker {
-            0%, 100% { opacity: 0.98; }
-            50% { opacity: 1; }
+            0% { opacity: 0.97; }
+            30% { opacity: 1; }
+            70% { opacity: 0.985; }
+            100% { opacity: 0.97; }
         }
-        body { animation: crtFlicker 0.1s infinite; }
+        body { animation: crtFlicker 4s infinite; }
         #app, #app > *, .navbar, header { position: relative; z-index: 10 !important; }
     `;
     document.head.appendChild(flickerStyle);
