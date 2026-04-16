@@ -1,25 +1,39 @@
 #!/usr/bin/with-contenv bash
-# Runs on every container start. Idempotent.
-# - clears Laravel caches so our overlay takes effect
-# - runs pending migrations (adds theme_mode / theme_name columns if not present)
+# Runs on every container start AFTER linuxserver populates /app/www.
+# Copies staged theme files into the live app tree + runs migrations.
 set -e
 
+STAGE=/heimdall-themes
 APP=/app/www
-cd "$APP"
 
-# Wait for /config/www/app.sqlite to exist (linuxserver copies it on first run)
-for i in $(seq 1 30); do
-    [ -f /config/www/app.sqlite ] && break
+echo "[heimdall-themes] waiting for app install..."
+for i in $(seq 1 60); do
+    [ -f "$APP/artisan" ] && break
     sleep 1
 done
 
-if [ -f /config/www/app.sqlite ]; then
-    s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
-        echo "[heimdall-themes] migrate failed (non-fatal, column may already exist)"
-    s6-setuidgid abc php artisan config:clear 2>&1 || true
-    s6-setuidgid abc php artisan route:clear  2>&1 || true
-    s6-setuidgid abc php artisan view:clear   2>&1 || true
-    echo "[heimdall-themes] init complete"
-else
-    echo "[heimdall-themes] WARNING: /config/www/app.sqlite not found after 30s, skipping migrate"
+if [ ! -f "$APP/artisan" ]; then
+    echo "[heimdall-themes] ERROR: $APP/artisan not found after 60s, aborting"
+    exit 0
 fi
+
+echo "[heimdall-themes] overlaying theme files into $APP"
+cp -af "$STAGE"/* "$APP"/
+chown -R abc:users \
+    "$APP/app/Http/Controllers/ThemeController.php" \
+    "$APP/app/Models/Theme.php" \
+    "$APP/resources/views/settings/themes.blade.php" \
+    "$APP/resources/views/layouts/app.blade.php" \
+    "$APP/resources/themes" \
+    "$APP/public/themes" \
+    "$APP/routes/web.php" \
+    "$APP/database/migrations/2025_01_01_000000_add_theme_to_settings.php"
+
+cd "$APP"
+s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
+    echo "[heimdall-themes] migrate skipped (column may already exist)"
+s6-setuidgid abc php artisan config:clear 2>&1 || true
+s6-setuidgid abc php artisan route:clear  2>&1 || true
+s6-setuidgid abc php artisan view:clear   2>&1 || true
+
+echo "[heimdall-themes] init complete"
