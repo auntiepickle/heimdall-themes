@@ -13,8 +13,8 @@ for i in $(seq 1 60); do
 done
 
 if [ ! -f "$APP/artisan" ]; then
-    echo "[heimdall-themes] ERROR: $APP/artisan not found after 60s, aborting"
-    exit 0
+    echo "[heimdall-themes] ERROR: $APP/artisan not found after 60s — theme engine will not work"
+    exit 1
 fi
 
 echo "[heimdall-themes] overlaying theme files into $APP"
@@ -66,7 +66,7 @@ else
 fi
 
 # Pass THEME_IMAGE_URL to Laravel's .env so PHP-FPM can read it
-if [ -n "${THEME_IMAGE_URL:-}" ]; then
+if [ -n "${THEME_IMAGE_URL:-}" ] && [ -f "$APP/.env" ]; then
     if grep -q "^THEME_IMAGE_URL=" "$APP/.env" 2>/dev/null; then
         sed -i "s|^THEME_IMAGE_URL=.*|THEME_IMAGE_URL=${THEME_IMAGE_URL}|" "$APP/.env"
     else

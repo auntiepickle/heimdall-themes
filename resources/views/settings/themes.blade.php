@@ -32,14 +32,14 @@
                     'lofi-night' => 'background:linear-gradient(135deg,#1e2a45 0%,#0a0a14 60%,#2d1b69 100%);',
                     'terminal' => 'background:#0a0a0a;color:#00FF41;font-family:monospace;text-shadow:0 0 8px #00FF41;',
                     'aurora' => 'background:linear-gradient(135deg,#020212 0%,#0e4d64 40%,#00ff87 80%,#7b2d8e 100%);',
-                    'paper' => 'background:linear-gradient(135deg,#2d3b2a 0%,#4a6548 40%,#8aab86 100%);',
+                    'woodland' => 'background:linear-gradient(135deg,#2d3b2a 0%,#4a6548 40%,#8aab86 100%);',
                     'void' => 'background:#0a0a0a;',
                 ];
                 $previewIcons = [
                     'lofi-night' => '&#127769;',
                     'terminal' => '&#62;&lowbar;',
                     'aurora' => '&#10024;',
-                    'paper' => '&#127807;',
+                    'woodland' => '&#127807;',
                     'void' => '&#9679;',
                 ];
                 $pStyle = $previewStyles[$theme->slug] ?? 'background:linear-gradient(135deg,#1e2a45,#0a0a14);';
