@@ -330,25 +330,33 @@ document.addEventListener('DOMContentLoaded', () => {
         uniform float u_time,u_theme;
         float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
         float hash1(float x){return fract(sin(x*391.32)*43758.5453);}
+        float filmHash(vec2 p,float t){
+            float tf=floor(t*24.);float bl=fract(t*24.);bl=bl*bl*(3.-2.*bl);
+            return mix(fract(sin(dot(p+tf,vec2(127.1,311.7)))*43758.5453),
+                       fract(sin(dot(p+tf+1.,vec2(127.1,311.7)))*43758.5453),bl);
+        }
         void main(){
             vec2 uv=gl_FragCoord.xy/u_resolution; uv.y=1.-uv.y;
             float t=u_time;
             bool isNight = u_theme > 1.5;
 
-            float grainAmt    = isNight ? 1.15 : 0.98;
+            float grainAmt    = isNight ? 1.6 : 1.3;
             float scanAmt     = isNight ? 0.10 : 0.07;
             float aberrBase   = isNight ? 0.008 : 0.005;
             float glitchThresh= isNight ? 0.91 : 0.94;
             float rollSpeed   = isNight ? 0.07 : 0.05;
-            float lightThresh = isNight ? 0.76 : 0.80;
+            float lightThresh = isNight ? 0.88 : 0.92;
             float burnAmt     = isNight ? 0.35 : 0.26;
 
-            float scanRoll=mod(uv.y+t*rollSpeed,1.);
+            float scanRoll=mod(uv.y+t*rollSpeed+sin(t*0.13)*0.008+sin(t*0.031)*0.004,1.);
             float rollBand=smoothstep(0.006,0.,abs(scanRoll-0.5))*(isNight?0.10:0.06);
             float scanline=sin(gl_FragCoord.y*3.14159*(isNight?2.2:1.8))*scanAmt+0.5;
-            float grain=(hash(uv+fract(t*0.83))-0.5)*grainAmt
-                        +(hash(uv*1.8+fract(t*0.61+0.4))-0.5)*grainAmt*0.5
-                        +(hash(uv*3.1+fract(t*0.29+0.9))-0.5)*grainAmt*0.28;
+            float breathD=0.85+0.15*sin(t*0.21);
+            float breathC=0.70+0.30*sin(t*0.13+1.7);
+            float fine=(filmHash(gl_FragCoord.xy,t)-0.5)*2.*mix(0.12,0.04,0.5);
+            float coarse=(filmHash(floor(gl_FragCoord.xy/3.)*0.7,t)-0.5)*2.*mix(0.09,0.02,0.5)*breathC;
+            float grain=(fine+coarse)*breathD*grainAmt;
+            grain*=0.9+uv.y*0.2;
             float aberrAmt=aberrBase+sin(t*0.7)*0.004;
             float rShift=hash(vec2(floor(uv.y*80.),t))>0.96?(hash(vec2(t,uv.y))-0.5)*0.04:aberrAmt*(uv.x-0.5);
             float glitchLine=floor(uv.y*60.),glitchTime=floor(t*8.);
@@ -366,14 +374,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if(hash1(ltPhase)>lightThresh){float ltX=hash1(ltPhase+1.);float ltAge=fract(t*0.4);
                 lightning=smoothstep(0.012,0.,abs(uv.x-ltX))*(1.-ltAge*3.)*step(ltAge,0.33)*(0.7+hash(uv+ltPhase)*0.4);}
 
-            float rain=0.;int rainCount=isNight?8:6;
+            float rain=0.;int rainCount=isNight?5:3;
             for(int i=0;i<8;i++){
                 if(float(i)>=float(rainCount))break;
                 float fi=float(i);
                 float rx=hash1(fi*7.3+floor(t*0.5))*1.2-0.1;
                 float ry=mod(uv.y+t*(0.4+fi*0.07)+fi*0.37,1.2)-0.1;
                 float rlen=smoothstep(0.,0.18,ry)*smoothstep(0.22,0.18,ry);
-                rain+=smoothstep(0.002,0.,abs(uv.x-rx-ry*0.08))*rlen*(isNight?0.18:0.10);}
+                rain+=smoothstep(0.002,0.,abs(uv.x-rx-ry*0.08))*rlen*(isNight?0.10:0.06);}
 
             float burn=pow(smoothstep(0.45,1.,length((uv-0.5)*1.4)),2.)*burnAmt;
             float val=clamp(0.5+grain*0.55+scanline*0.05+rollBand*0.10
