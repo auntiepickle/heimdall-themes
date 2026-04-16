@@ -1,0 +1,99 @@
+/* Aurora — Northern Lights Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600;
+    background: #020212 !important;
+}
+#app {
+    background: none !important;
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 25%, rgba(2,2,18,0.7) 100%);
+}
+
+div.item {
+    background: rgba(14,77,100,0.18) !important;
+    backdrop-filter: blur(16px) saturate(120%);
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0,255,135,0.06);
+    transition: all 0.4s ease;
+    margin: 20px;
+    padding: 20px !important;
+}
+div.item:hover {
+    transform: translateY(-8px) scale(1.02);
+    background: rgba(14,77,100,0.28) !important;
+    border-color: rgba(45,226,230,0.25) !important;
+    box-shadow: 0 16px 48px rgba(0,255,135,0.12);
+}
+div.item .title {
+    font-size: 1.2em !important;
+    font-weight: 800;
+    color: #e8f4f8 !important;
+}
+div.item a, div.item .description, div.item * {
+    color: #a8d8ea !important;
+    text-shadow: 0 0 8px rgba(45,226,230,0.15);
+}
+div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
+    display: none !important;
+}
+.app-icon img { border-radius: 12px; max-height: 55px; }
+div.item:hover .app-icon img { transform: scale(1.15); }
+
+header, .navbar {
+    background: rgba(2,2,18,0.85) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(45,226,230,0.1);
+}
+header *, .navbar * { color: #a8d8ea !important; }
+
+input, textarea {
+    background: rgba(10,22,40,0.9) !important;
+    color: #e8f4f8 !important;
+    border: 1px solid rgba(45,226,230,0.2) !important;
+    border-radius: 12px;
+    font-family: inherit;
+}
+
+/* Day: icy blue */
+body.day div.item { border-color: rgba(87,193,232,0.2) !important; }
+body.day div.item:hover { border-color: rgba(87,193,232,0.4) !important; }
+/* Evening: teal aurora */
+body.evening div.item { border-color: rgba(20,167,108,0.25) !important; }
+body.evening div.item:hover { border-color: rgba(20,167,108,0.5) !important; box-shadow: 0 16px 48px rgba(20,167,108,0.12); }
+/* Night: full aurora glow */
+body.night div.item { border-color: rgba(0,255,135,0.15) !important; }
+body.night div.item:hover { border-color: rgba(45,226,230,0.35) !important; box-shadow: 0 16px 48px rgba(45,226,230,0.15); }
+
+#clock-container {
+    position: fixed !important;
+    top: 12px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 20 !important;
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+    background: rgba(2,2,18,0.7);
+    border: 1px solid rgba(45,226,230,0.2);
+    box-shadow: 0 4px 24px rgba(0,255,135,0.1);
+    transition: all 0.3s ease !important;
+}
+#clock-container:hover { transform: translateX(-50%) scale(1.06) !important; }
+@media (max-width: 768px) {
+    #clock-container { width: 72px !important; height: 72px !important; top: 8px !important; }
+}

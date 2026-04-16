@@ -6,14 +6,15 @@ use Illuminate\Support\Collection;
 class Theme {
     public string $slug, $name, $description, $author;
     public ?string $preview;
-    public array $variants, $autoSchedule;
+    public array $variants, $autoSchedule, $backgrounds;
     public string $path;
 
     public function __construct(array $d, string $path) {
         $this->slug=$d["slug"]; $this->name=$d["name"];
         $this->description=$d["description"]??""; $this->author=$d["author"]??"";
         $this->preview=$d["preview"]??null; $this->variants=$d["variants"]??["default"];
-        $this->autoSchedule=$d["auto_schedule"]??[]; $this->path=$path;
+        $this->autoSchedule=$d["auto_schedule"]??[]; $this->backgrounds=$d["backgrounds"]??[];
+        $this->path=$path;
     }
 
     public static function all(): Collection {
@@ -33,6 +34,13 @@ class Theme {
     public function jsUrl(): string  { return asset("themes/{$this->slug}/theme.js"); }
     public function hasJs(): bool    { return File::exists($this->path."/theme.js"); }
     public function isMultiVariant(): bool { return count($this->variants)>1; }
+    public function backgroundsJson(): string {
+        $out=[];
+        foreach($this->backgrounds as $variant=>$files){
+            $out[$variant]=array_map(fn($f)=>asset("themes/{$this->slug}/backgrounds/$variant/$f"),$files);
+        }
+        return json_encode($out);
+    }
 
     public function currentVariant(): string {
         if(!$this->isMultiVariant()) return $this->variants[0]??"default";
