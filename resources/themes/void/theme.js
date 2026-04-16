@@ -53,14 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 else{accent=vec3(0.231,0.510,0.965);accent2=vec3(0.361,0.965,0.545);}
 
                 // ---- BACKGROUND TEXTURE (always renders) ----
-                // Subtle noise texture on the black — makes it feel material, not void
-                float bgNoise=fbm(rawUV*8.+t*0.01)*0.025;
-                float bgNoise2=noise(rawUV*25.)*0.012;
-                vec3 bg=vec3(0.02+bgNoise+bgNoise2);
-                // Subtle gradient — slightly lighter top-left
-                bg+=vec3(0.015)*smoothstep(1.2,0.,length(rawUV-vec2(0.1,0.9)));
-                // Very faint accent wash in one corner
-                bg+=accent*0.008*smoothstep(0.8,0.,length(rawUV-vec2(0.85,0.15)));
+                // Layered cloud noise — slow drifting fog gives depth
+                float cloud1=fbm(rawUV*3.+vec2(t*0.008,t*0.005))*0.04;
+                float cloud2=fbm(rawUV*5.+vec2(-t*0.012,t*0.007)+3.)*0.03;
+                float cloud3=fbm(rawUV*8.+vec2(t*0.006,-t*0.009)+7.)*0.02;
+                float clouds=cloud1+cloud2+cloud3;
+                // Fine grain texture
+                float grain=noise(rawUV*30.)*0.01;
+                vec3 bg=vec3(0.018+clouds+grain);
+                // Volumetric gradient — lighter upper area, darker bottom
+                bg+=vec3(0.02)*smoothstep(0.,0.7,rawUV.y);
+                // Accent-tinted fog in two corners
+                bg+=accent*0.012*smoothstep(0.7,0.,length(rawUV-vec2(0.85,0.2)));
+                bg+=accent2*0.006*smoothstep(0.8,0.,length(rawUV-vec2(0.1,0.8)));
 
                 // ---- BLOB (offset to upper-right, smaller) ----
                 vec2 blobOffset=vec2(0.28,-0.22); // upper-right
@@ -196,6 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animateGrain);
     }
     animateGrain();
+
+    // Shared state — must be declared before particles and clock both use them
+    const accentColors={day:'#8b5cf6',evening:'#ff2d55',night:'#3b82f6'};
+    let currentTheme='';
 
     // ====================== PARTICLES + WAVEFORM ======================
     const pCanvas=document.createElement('canvas');
@@ -343,9 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clockContainer.style.display=/settings|items|users|tags/.test(a[2]||window.location.pathname)?'none':'block';};
     window.addEventListener('popstate',()=>{
         clockContainer.style.display=/settings|items|users|tags/.test(window.location.pathname)?'none':'block';});
-
-    const accentColors={day:'#8b5cf6',evening:'#ff2d55',night:'#3b82f6'};
-    let currentTheme='';
 
     function drawClock(){
         const W=80,cx=40,cy=40,r=36;
