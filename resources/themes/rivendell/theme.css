@@ -1,0 +1,123 @@
+/* Rivendell -- Elvish Valley */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-weight: 600;
+}
+#app {
+    background: none !important;
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+/* Faint gold filigree grid */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(0deg, transparent 0px, transparent 98px, rgba(218,185,110,0.025) 98px, rgba(218,185,110,0.025) 100px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 98px, rgba(218,185,110,0.025) 98px, rgba(218,185,110,0.025) 100px);
+}
+
+div.item {
+    background: var(--card-bg, rgba(62,50,30,0.45)) !important;
+    backdrop-filter: blur(14px) saturate(110%);
+    border: 1px solid var(--card-border, rgba(196,164,90,0.15)) !important;
+    border-top: 2px solid var(--accent, rgba(218,185,110,0.35)) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 24px var(--card-shadow, rgba(0,0,0,0.2)), inset 0 1px 0 rgba(218,185,110,0.06) !important;
+    transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+    margin: 18px;
+    padding: 20px !important;
+}
+div.item:hover {
+    transform: translateY(-3px) !important;
+    background: var(--card-hover, rgba(72,58,35,0.6)) !important;
+    box-shadow: 0 8px 32px var(--card-shadow, rgba(0,0,0,0.3)), inset 0 1px 0 rgba(218,185,110,0.1) !important;
+    border-color: var(--accent) !important;
+}
+div.item .title {
+    font-size: 1.3em !important;
+    font-weight: 700;
+    color: var(--text, #e8dcc4) !important;
+    letter-spacing: 0.02em;
+}
+div.item a, div.item .description, div.item * {
+    color: var(--text-soft, #b09870) !important;
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
+    display: none !important;
+}
+.app-icon img {
+    border-radius: 4px;
+    max-height: 52px;
+    filter: sepia(0.2) brightness(0.85);
+    transition: filter 0.3s ease;
+}
+div.item:hover .app-icon img { filter: sepia(0.1) brightness(1); }
+
+header, .navbar {
+    background: var(--header-bg, rgba(30,24,14,0.88)) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border, rgba(196,164,90,0.1));
+}
+header *, .navbar * {
+    color: var(--text-soft, #b09870) !important;
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-weight: 600;
+}
+input, textarea {
+    background: rgba(30,24,14,0.9) !important;
+    color: var(--text, #e8dcc4) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 4px;
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+
+/* Day: golden sunlight on autumn stone */
+body.day {
+    --card-bg: rgba(62,50,30,0.45); --card-hover: rgba(72,58,35,0.6);
+    --card-border: rgba(196,164,90,0.15); --card-shadow: rgba(0,0,0,0.2);
+    --accent: rgba(218,185,110,0.35); --text: #e8dcc4; --text-soft: #b09870;
+    --header-bg: rgba(30,24,14,0.88);
+}
+/* Evening: deep amber and copper */
+body.evening {
+    --card-bg: rgba(55,32,15,0.55); --card-hover: rgba(65,38,18,0.68);
+    --card-border: rgba(180,100,40,0.18); --card-shadow: rgba(0,0,0,0.25);
+    --accent: rgba(205,130,50,0.4); --text: #d4b88a; --text-soft: #8a6540;
+    --header-bg: rgba(25,15,8,0.9);
+}
+/* Night: moonlit silver on deep blue */
+body.night {
+    --card-bg: rgba(20,22,42,0.55); --card-hover: rgba(28,30,55,0.68);
+    --card-border: rgba(140,150,200,0.12); --card-shadow: rgba(0,0,0,0.3);
+    --accent: rgba(180,195,230,0.3); --text: #c8cce8; --text-soft: #7a80a8;
+    --header-bg: rgba(12,12,24,0.9);
+}
+
+#clock-container {
+    position: fixed !important;
+    top: 14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 20 !important;
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+    background: var(--header-bg, rgba(30,24,14,0.9)) !important;
+    border: 1px solid var(--card-border) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px var(--accent);
+    transition: all 0.3s ease !important;
+}
+#clock-container:hover { transform: translateX(-50%) scale(1.05) !important; }
+@media (max-width: 768px) {
+    #clock-container { width: 72px !important; height: 72px !important; top: 8px !important; }
+}

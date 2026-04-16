@@ -25,6 +25,19 @@
                     </div>
                 </div>
             </label>
+            {{-- Random --}}
+            <label style="cursor:pointer;display:block;">
+                <input type="radio" name="theme_name" value="__random__" {{ $activeSlug==='__random__'?'checked':'' }} style="display:none;" class="tr">
+                <div class="tc {{ $activeSlug==='__random__'?'ta':'' }}">
+                    <div class="tc-preview" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460,#e94560);">
+                        <span style="font-size:2.2rem;">&#127922;</span>
+                    </div>
+                    <div class="tc-info">
+                        <div class="tc-name">Random</div>
+                        <div class="tc-desc">Different theme on every page load</div>
+                    </div>
+                </div>
+            </label>
             {{-- Themes --}}
             @foreach($themes as $theme)
             @php
@@ -34,6 +47,7 @@
                     'aurora' => 'background:linear-gradient(135deg,#020212 0%,#0e4d64 40%,#00ff87 80%,#7b2d8e 100%);',
                     'woodland' => 'background:linear-gradient(135deg,#2d3b2a 0%,#4a6548 40%,#8aab86 100%);',
                     'void' => 'background:#0a0a0a;',
+                    'rivendell' => 'background:linear-gradient(135deg,#1a150e 0%,#4a3520 30%,#29446a 70%,#0a0a14 100%);',
                 ];
                 $previewIcons = [
                     'lofi-night' => '&#127769;',
@@ -41,6 +55,7 @@
                     'aurora' => '&#10024;',
                     'woodland' => '&#127807;',
                     'void' => '&#9679;',
+                    'rivendell' => '&#127964;',
                 ];
                 $pStyle = $previewStyles[$theme->slug] ?? 'background:linear-gradient(135deg,#1e2a45,#0a0a14);';
                 $pIcon = $previewIcons[$theme->slug] ?? '&#127912;';

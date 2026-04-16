@@ -425,6 +425,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     animateShaders();
 
+    // ====================== FILM GRAIN OVERLAY (always visible) ======================
+    const grainCanvas = document.createElement('canvas');
+    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:overlay;opacity:0.55;';
+    document.body.appendChild(grainCanvas);
+    const grainCtx = grainCanvas.getContext('2d');
+    let grainW=0,grainH=0,grainFrame=0;
+    function animateGrain(){
+        if(grainCanvas.width!==window.innerWidth||grainCanvas.height!==window.innerHeight){
+            grainCanvas.width=window.innerWidth;grainCanvas.height=window.innerHeight;
+            grainW=grainCanvas.width;grainH=grainCanvas.height;
+        }
+        grainFrame++;
+        if(grainFrame%2!==0){requestAnimationFrame(animateGrain);return;}
+        const imgData=grainCtx.createImageData(grainW,grainH);
+        const d=imgData.data;
+        for(let i=0;i<d.length;i+=4){
+            const fine=(Math.random()-0.5)*2;
+            const g=fine*50;
+            d[i]=128+g*1.12;d[i+1]=128+g*1.04;d[i+2]=128+g*0.88;
+            d[i+3]=16+Math.floor(Math.random()*12);
+        }
+        grainCtx.putImageData(imgData,0,0);
+        requestAnimationFrame(animateGrain);
+    }
+    animateGrain();
+
     // ====================== PARTICLE CANVAS ======================
     const canvas = document.createElement('canvas');
     canvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;';
@@ -645,14 +671,28 @@ document.addEventListener('DOMContentLoaded', () => {
             wanderSpeed: Math.random()*0.012+0.003 };
     }
 
+    function spawnRaindrop(w, h) {
+        return { type:'rain', x: Math.random()*w, y: -10,
+            len: Math.random()*18+8, speed: Math.random()*4+6,
+            drift: Math.random()*0.8-0.4,
+            opacity: Math.random()*0.15+0.05 };
+    }
+
+    // Rain triggers randomly. ~30% chance per theme switch. Lasts until next switch.
+    let isRaining = false;
+
     function initParticles(theme, w, h) {
         particles = [];
+        isRaining = Math.random() < 0.3;
         if (theme==='day') {
             for(let i=0;i<28;i++){ const p=spawnLeaf(w,h); p.y=Math.random()*h; particles.push(p); }
+            if (isRaining) for(let i=0;i<60;i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         } else if (theme==='evening') {
             for(let i=0;i<45;i++){ const p=spawnEmber(w,h); p.y=Math.random()*h+h*0.3; p.life=Math.random(); particles.push(p); }
+            if (isRaining) for(let i=0;i<80;i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         } else {
             for(let i=0;i<35;i++) particles.push(spawnFirefly(w,h));
+            if (isRaining) for(let i=0;i<50;i++){ const p=spawnRaindrop(w,h); p.y=Math.random()*h; particles.push(p); }
         }
     }
 
@@ -741,6 +781,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 p.x = Math.max(margin*0.5, Math.min(w - margin*0.5, p.x));
                 p.y = Math.max(margin*0.5, Math.min(h - margin*0.5, p.y));
                 drawFirefly(ctx, p, fireflyRamp);
+            } else if(p.type==='rain'){
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x+p.drift*2, p.y+p.len);
+                ctx.strokeStyle=`rgba(180,200,220,${p.opacity*particleRamp})`;
+                ctx.lineWidth=0.8;
+                ctx.lineCap='round';
+                ctx.stroke();
+                p.x+=p.drift; p.y+=p.speed;
+                if(p.y>h+20) Object.assign(p, spawnRaindrop(w,h));
             }
         });
         requestAnimationFrame(animate);

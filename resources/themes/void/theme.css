@@ -3,12 +3,12 @@
 
 :root {
     --void-bg: #000000;
-    --void-surface: rgba(255,255,255,0.015);
-    --void-surface-hover: rgba(255,255,255,0.03);
-    --void-border: rgba(255,255,255,0.03);
-    --void-border-hover: rgba(255,255,255,0.08);
-    --void-text: #d4d0ca;
-    --void-text-muted: #505055;
+    --void-surface: rgba(255,255,255,0.008);
+    --void-surface-hover: rgba(255,255,255,0.02);
+    --void-border: rgba(255,255,255,0.02);
+    --void-border-hover: rgba(255,255,255,0.06);
+    --void-text: #b0ada8;
+    --void-text-muted: #3a3a3f;
     --void-accent: #8b5cf6;
     --void-accent-glow: rgba(139,92,246,0.15);
 }
@@ -61,7 +61,7 @@ div.item:hover {
 div.item .title {
     font-size: 1.1em !important;
     font-weight: 500;
-    color: rgba(212,208,202,0.7) !important;
+    color: rgba(176,173,168,0.5) !important;
     letter-spacing: -0.01em;
 }
 div.item a, div.item .description, div.item * {
@@ -69,9 +69,9 @@ div.item a, div.item .description, div.item * {
     font-family: 'Inter', sans-serif !important;
     font-weight: 400;
 }
-div.item:hover .title { color: var(--void-text) !important; }
+div.item:hover .title { color: rgba(176,173,168,0.75) !important; }
 div.item:hover a, div.item:hover .description, div.item:hover * {
-    color: rgba(232,228,222,0.56) !important;
+    color: rgba(176,173,168,0.4) !important;
 }
 div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
     display: none !important;
@@ -79,10 +79,10 @@ div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="ba
 .app-icon img {
     border-radius: 8px;
     max-height: 48px;
-    filter: grayscale(0.6) brightness(0.6) contrast(0.9);
+    filter: grayscale(0.8) brightness(0.35) contrast(0.8);
     transition: filter 0.4s cubic-bezier(0.16,1,0.3,1);
 }
-div.item:hover .app-icon img { filter: grayscale(0.1) brightness(0.9); }
+div.item:hover .app-icon img { filter: grayscale(0.3) brightness(0.7); }
 
 header, .navbar {
     background: rgba(0,0,0,0.95) !important;

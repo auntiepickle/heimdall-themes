@@ -76,8 +76,6 @@ if [ -n "${THEME_IMAGE_URL:-}" ] && [ -f "$APP/.env" ]; then
 fi
 
 cd "$APP"
-s6-setuidgid abc php artisan migrate --force --no-interaction 2>&1 || \
-    echo "[heimdall-themes] migrate skipped (column may already exist)"
 s6-setuidgid abc php artisan config:clear 2>&1 || true
 s6-setuidgid abc php artisan route:clear  2>&1 || true
 s6-setuidgid abc php artisan view:clear   2>&1 || true
