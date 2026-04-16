@@ -4,7 +4,7 @@ use App\Models\Theme; use App\Setting; use Illuminate\Http\Request;
 
 class ThemeController extends Controller {
     public function index() {
-        $themes = Theme::all()->filter(fn($t) => $t->slug !== '_template');
+        $themes = Theme::all()->filter(fn($t) => !str_starts_with(basename($t->path), '_'));
         $activeSlug = self::getThemeName();
         return view("settings.themes", [
             "themes" => $themes,
