@@ -27,5 +27,4 @@ COPY docker/overlay/                                 ${STAGE}/
 
 # Init hook — runs after linuxserver populates /app/www
 COPY docker/init/01-heimdall-themes                  /custom-cont-init.d/01-heimdall-themes
-COPY docker/init/clear-legacy-customizations.php     /heimdall-themes/clear-legacy.php
 RUN chmod +x /custom-cont-init.d/01-heimdall-themes

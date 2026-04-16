@@ -122,7 +122,7 @@
                         <a id="items" class="config" href="{{ route('items.index', []) }}"><i class="fas fa-list"></i><div class="tooltip left">{{ __('app.apps.app_list') }}</div></a>
                         <a id="folder" class="config" href="{{ route('tags.index', []) }}"><i class="fas fa-tag"></i><div class="tooltip left">{{ __('app.apps.tag_list') }}</div></a>
                         <a id="settings" class="config" href="{{ route('settings.index', []) }}"><i class="fas fa-cogs"></i><div class="tooltip left">{{ __('app.dashboard.settings') }}</div></a>
-                        <a id="themes" class="config" href="{{ route('settings.themes') }}"><i class="fas fa-palette"></i><div class="tooltip left">Themes</div></a>
+                        <a id="themes" class="config" href="{{ route('settings.themes') }}"><i class="fas fa-paint-brush"></i><div class="tooltip left">Themes</div></a>
                     </div>
                     @endif
                 </main>
