@@ -1,8 +1,8 @@
 {
-    "name": "Paper",
+    "name": "Woodland",
     "slug": "paper",
     "author": "piekel",
-    "description": "Warm parchment, hand-drawn feel, cozy coffee-shop calm",
+    "description": "Cozy forest cottagecore — mossy greens, warm earth, soft glow",
     "preview": null,
     "variants": ["day", "evening", "night"],
     "auto_schedule": {

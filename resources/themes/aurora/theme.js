@@ -26,63 +26,100 @@ document.addEventListener('DOMContentLoaded', () => {
             uniform float u_time, u_theme;
 
             float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+            float hash1(float n){return fract(sin(n)*43758.5453);}
             float noise(vec2 p){
                 vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
                 return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
             }
-            float fbm(vec2 p){float v=0.,a=0.5;for(int i=0;i<4;i++){v+=a*noise(p);p*=2.1;a*=0.5;}return v;}
+            float fbm(vec2 p){float v=0.,a=0.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.1;a*=0.5;}return v;}
+
+            // Slow organic drift
+            float drift(float seed, float t){
+                float speed=0.02+hash1(seed)*0.025;
+                float phase=hash1(seed+7.3)*6.28;
+                return sin(t*speed+phase)*0.45+sin(t*speed*1.7+phase*0.6)*0.35+sin(t*speed*0.4+phase*1.4)*0.2;
+            }
+            float driftR(float seed, float t, float lo, float hi){
+                return lo+(drift(seed,t)*0.5+0.5)*(hi-lo);
+            }
 
             void main(){
                 vec2 uv=gl_FragCoord.xy/u_resolution; uv.y=1.-uv.y;
                 float t=u_time;
+                vec2 mouse=u_mouse/u_resolution; mouse.y=1.-mouse.y;
 
-                // Stars
+                // Deep space background
+                float space=fbm(uv*3.+t*0.01)*0.08;
+                vec3 bgCol=vec3(0.01,0.01,0.07)+vec3(0.02,0.04,0.08)*space;
+
+                // Stars — dense field
                 float stars=0.;
-                for(int i=0;i<20;i++){
+                for(int i=0;i<30;i++){
                     float fi=float(i);
                     vec2 sp=vec2(hash(vec2(fi*3.1,fi*7.4)),hash(vec2(fi*5.3,fi*2.9)));
-                    float twinkle=sin(t*(0.8+fi*0.2)+fi*2.1)*0.5+0.5;
-                    stars+=smoothstep(0.015,0.,length(uv-sp))*twinkle*0.8;
+                    float twinkle=sin(t*(0.6+fi*0.15)+fi*2.1)*0.4+0.6;
+                    float sz=hash(vec2(fi*1.7,fi*4.2))*0.008+0.008;
+                    stars+=smoothstep(sz,0.,length(uv-sp))*twinkle;
                 }
+                vec3 starCol=vec3(0.85,0.92,1.)*stars*0.7;
 
-                // Aurora ribbons
-                float aurora=0.;
+                // Aurora ribbons — 6 layers with vivid color spectrum
                 vec3 auroraCol=vec3(0);
-                for(int i=0;i<4;i++){
+                float auroraTotal=0.;
+                for(int i=0;i<6;i++){
                     float fi=float(i);
-                    float speed=0.15+fi*0.05;
-                    float wave=sin(uv.x*3.+t*speed+fi*1.5)*sin(uv.x*1.8-t*speed*0.7+fi*2.3)*0.5+0.5;
-                    float y=0.2+fi*0.08;
-                    float width=0.06+sin(t*0.1+fi)*0.02;
+                    float speed=driftR(fi+10.,t,0.12,0.35);
+                    float wave=sin(uv.x*3.5+t*speed+fi*1.2)
+                              *sin(uv.x*2.1-t*speed*0.6+fi*2.8)*0.5+0.5;
+                    float y=driftR(fi+20.,t,0.12,0.45)+fi*0.06;
+                    float width=driftR(fi+30.,t,0.04,0.12);
                     float band=smoothstep(width,0.,abs(uv.y-y-wave*width*2.));
-                    float strength=0.25-fi*0.04;
+                    float strength=(0.35-fi*0.03)*(drift(fi+40.,t)*0.2+0.8);
 
+                    // Color spectrum: green → cyan → blue → purple → pink
                     vec3 col;
-                    if(u_theme<0.5){
-                        col=mix(vec3(0.34,0.76,0.91),vec3(0.17,0.5,0.69),fi/3.);
-                    } else if(u_theme<1.5){
-                        col=mix(vec3(0.08,0.65,0.42),vec3(0.27,0.64,0.62),fi/3.);
-                    } else {
-                        col=mix(vec3(0.,1.,0.53),vec3(0.48,0.18,0.56),fi/3.);
-                    }
+                    float hueShift=fi/5.+t*0.02;
+                    float h=fract(hueShift);
+                    if(h<0.2) col=mix(vec3(0.,1.,0.5),vec3(0.,1.,0.9),h/0.2);
+                    else if(h<0.4) col=mix(vec3(0.,1.,0.9),vec3(0.2,0.6,1.),( h-0.2)/0.2);
+                    else if(h<0.6) col=mix(vec3(0.2,0.6,1.),vec3(0.5,0.2,0.9),(h-0.4)/0.2);
+                    else if(h<0.8) col=mix(vec3(0.5,0.2,0.9),vec3(0.9,0.2,0.6),(h-0.6)/0.2);
+                    else col=mix(vec3(0.9,0.2,0.6),vec3(0.,1.,0.5),(h-0.8)/0.2);
+
+                    // Day: desaturate slightly
+                    if(u_theme<0.5) col=mix(col,vec3(0.6,0.85,0.95),0.4);
+
                     auroraCol+=col*band*strength;
-                    aurora+=band*strength;
+                    auroraTotal+=band*strength;
                 }
+                auroraCol=min(auroraCol,vec3(1.));
 
-                // Mouse glow
-                vec2 mouse=u_mouse/u_resolution; mouse.y=1.-mouse.y;
+                // Nebula glow — colored clouds behind aurora
+                float neb1=fbm(uv*2.+vec2(t*0.03,t*0.02))*0.15;
+                float neb2=fbm(uv*1.5+vec2(-t*0.02,t*0.04))*0.12;
+                vec3 nebCol=vec3(0.15,0.05,0.35)*neb1+vec3(0.02,0.2,0.3)*neb2;
+
+                // Mouse bio-glow
                 float mdist=length(uv-mouse);
-                float glow=1./(1.+pow(mdist*6.,2.))*0.15;
-                vec3 glowCol=vec3(0.18,0.9,0.85)*glow;
+                float bioFalloff=1./(1.+pow(mdist*5.,1.8));
+                vec3 bioCol=vec3(0.1,0.9,0.8)*bioFalloff*0.2;
 
-                // Nebula clouds
-                float neb=fbm(uv*2.5+t*0.02)*0.12;
-                vec3 nebCol=vec3(0.1,0.2,0.5)*neb;
+                // Shooting star (occasional)
+                float shootStar=0.;
+                float shootPhase=floor(t*0.15);
+                if(hash1(shootPhase)>0.6){
+                    float age=fract(t*0.15);
+                    vec2 sStart=vec2(hash1(shootPhase+1.),hash1(shootPhase+2.)*0.4);
+                    vec2 sEnd=sStart+vec2(0.3,-0.15);
+                    vec2 sPos=mix(sStart,sEnd,age);
+                    float trail=smoothstep(0.015,0.,length(uv-sPos))*(1.-age);
+                    shootStar=trail*0.8;
+                }
+                vec3 shootCol=vec3(0.9,0.95,1.)*shootStar;
 
-                vec3 starCol=vec3(0.9,0.95,1.)*stars;
-                vec3 color=starCol+auroraCol+glowCol+nebCol;
-                float alpha=clamp(stars*0.6+aurora+glow*2.+neb,0.,0.95);
-                gl_FragColor=vec4(color,alpha);
+                vec3 color=bgCol+starCol+auroraCol+nebCol+bioCol+shootCol;
+                float alpha=clamp(0.15+stars*0.4+auroraTotal*0.8+neb1+neb2+bioFalloff*0.3+shootStar,0.,0.98);
+                gl_FragColor=vec4(clamp(color,0.,1.),alpha);
             }
         `;
 
@@ -110,16 +147,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.addEventListener('resize',resize);resize();
 
-        function animate(){
+        function animateShader(){
             gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
             gl.uniform2f(uRes,auroraCanvas.width,auroraCanvas.height);
             gl.uniform2f(uMouse,mouseX,mouseY);
             gl.uniform1f(uTime,(Date.now()-startTime)/1000);
             gl.uniform1f(uTheme,currentThemeNum);
             gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-            requestAnimationFrame(animate);
+            requestAnimationFrame(animateShader);
         }
-        animate();
+        animateShader();
     }
 
     // ====================== PARTICLE CANVAS ======================
@@ -131,31 +168,37 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTheme = '';
 
     function spawnSnowflake(w,h){
-        return {x:Math.random()*w,y:-10,size:Math.random()*3+1,
-            speedX:Math.random()*0.4-0.2,speedY:Math.random()*0.5+0.2,
-            opacity:Math.random()*0.4+0.2,wobble:Math.random()*Math.PI*2};
+        return {type:'snow',x:Math.random()*w,y:-10,size:Math.random()*3+1,
+            speedX:Math.random()*0.5-0.25,speedY:Math.random()*0.6+0.2,
+            opacity:Math.random()*0.5+0.2,wobble:Math.random()*Math.PI*2};
     }
     function spawnWisp(w,h){
-        return {x:Math.random()*w,y:h+10,size:Math.random()*4+2,
-            speedX:Math.random()*0.3-0.15,speedY:-(Math.random()*0.3+0.15),
-            opacity:Math.random()*0.3+0.1,life:1,decay:Math.random()*0.003+0.001,
-            color:Math.random()>0.5?'#14a76c':'#2de2e6'};
+        const colors=['#00ff87','#2de2e6','#7b2d8e','#ff69b4','#14a76c'];
+        return {type:'wisp',x:Math.random()*w,y:h*0.7+Math.random()*h*0.3,
+            size:Math.random()*5+3,
+            vx:Math.random()*0.4-0.2,vy:-(Math.random()*0.4+0.2),
+            opacity:Math.random()*0.4+0.15,life:1,decay:Math.random()*0.003+0.001,
+            color:colors[Math.floor(Math.random()*colors.length)],
+            trail:[],trailMax:Math.floor(Math.random()*8+4)};
     }
     function spawnStar(w,h){
-        return {x:Math.random()*w,y:Math.random()*h,size:Math.random()*2+1,
-            pulse:Math.random()*Math.PI*2,pulseSpeed:Math.random()*0.03+0.01,
-            opacity:Math.random()*0.6+0.2};
+        return {type:'star',x:Math.random()*w,y:Math.random()*h,size:Math.random()*2.5+0.8,
+            pulse:Math.random()*Math.PI*2,pulseSpeed:Math.random()*0.04+0.01,
+            opacity:Math.random()*0.7+0.2,
+            color:Math.random()>0.8?'#ffe4f0':'#e8f4f8'};
     }
 
     function initParticles(theme,w,h){
         particles=[];
         if(theme==='day'){
-            for(let i=0;i<40;i++){const p=spawnSnowflake(w,h);p.y=Math.random()*h;particles.push(p);}
+            for(let i=0;i<50;i++){const p=spawnSnowflake(w,h);p.y=Math.random()*h;particles.push(p);}
+            for(let i=0;i<10;i++){const p=spawnWisp(w,h);p.y=Math.random()*h;particles.push(p);}
         }else if(theme==='evening'){
-            for(let i=0;i<25;i++){const p=spawnWisp(w,h);p.y=Math.random()*h;particles.push(p);}
+            for(let i=0;i<30;i++){const p=spawnWisp(w,h);p.y=Math.random()*h;particles.push(p);}
+            for(let i=0;i<30;i++) particles.push(spawnStar(w,h));
         }else{
-            for(let i=0;i<50;i++) particles.push(spawnStar(w,h));
-            for(let i=0;i<15;i++){const p=spawnWisp(w,h);p.y=Math.random()*h;particles.push(p);}
+            for(let i=0;i<60;i++) particles.push(spawnStar(w,h));
+            for(let i=0;i<25;i++){const p=spawnWisp(w,h);p.y=Math.random()*h;particles.push(p);}
         }
     }
 
@@ -163,29 +206,38 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         const w=canvas.width,h=canvas.height;
         particles.forEach(p=>{
-            if(p.decay!==undefined){
-                // Wisp
-                ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-                ctx.fillStyle=p.color||'#2de2e6';
-                ctx.globalAlpha=p.opacity*p.life;
-                ctx.shadowBlur=12;ctx.shadowColor=p.color||'#2de2e6';
-                ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;
-                p.x+=p.speedX+Math.sin(Date.now()/2000)*0.1;p.y+=p.speedY;p.life-=p.decay;
-                if(p.life<=0||p.y<-20) Object.assign(p,spawnWisp(w,h));
-            }else if(p.pulse!==undefined){
-                // Star
+            if(p.type==='wisp'){
+                p.trail.push({x:p.x,y:p.y});
+                if(p.trail.length>p.trailMax) p.trail.shift();
+                // Trail
+                if(p.trail.length>1){
+                    ctx.beginPath();ctx.moveTo(p.trail[0].x,p.trail[0].y);
+                    for(let i=1;i<p.trail.length;i++) ctx.lineTo(p.trail[i].x,p.trail[i].y);
+                    ctx.strokeStyle=p.color;ctx.globalAlpha=p.opacity*p.life*0.3;
+                    ctx.lineWidth=p.size*0.5;ctx.lineCap='round';ctx.stroke();
+                }
+                // Core
+                ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);
+                ctx.fillStyle=p.color;ctx.globalAlpha=p.opacity*p.life;
+                ctx.shadowBlur=16;ctx.shadowColor=p.color;ctx.fill();
+                ctx.shadowBlur=0;ctx.globalAlpha=1;
+                p.x+=p.vx+Math.sin(Date.now()/1500+p.opacity*10)*0.15;
+                p.y+=p.vy;p.life-=p.decay;
+                if(p.life<=0||p.y<-30) Object.assign(p,spawnWisp(w,h));
+            }else if(p.type==='star'){
                 p.pulse+=p.pulseSpeed;
-                const bright=Math.sin(p.pulse)*0.3+0.7;
+                const bright=Math.sin(p.pulse)*0.35+0.65;
                 ctx.beginPath();ctx.arc(p.x,p.y,p.size*bright,0,Math.PI*2);
-                ctx.fillStyle='#e8f4f8';ctx.globalAlpha=p.opacity*bright;
-                ctx.fill();ctx.globalAlpha=1;
+                ctx.fillStyle=p.color;ctx.globalAlpha=p.opacity*bright;
+                if(bright>0.85){ctx.shadowBlur=6;ctx.shadowColor=p.color;}
+                ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;
             }else{
                 // Snowflake
                 p.wobble+=0.02;
                 ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
                 ctx.fillStyle='#e8f4f8';ctx.globalAlpha=p.opacity;
                 ctx.fill();ctx.globalAlpha=1;
-                p.x+=p.speedX+Math.sin(p.wobble)*0.3;p.y+=p.speedY;
+                p.x+=p.speedX+Math.sin(p.wobble)*0.4;p.y+=p.speedY;
                 if(p.y>h+20) Object.assign(p,spawnSnowflake(w,h));
             }
         });
@@ -215,49 +267,62 @@ document.addEventListener('DOMContentLoaded', () => {
         const now=new Date();
         clockCtx.clearRect(0,0,W,W);
 
-        // Dark icy background
+        // Dark background with aurora shimmer
         clockCtx.beginPath();clockCtx.arc(cx,cy,r,0,Math.PI*2);
-        clockCtx.fillStyle='rgba(2,2,18,0.8)';clockCtx.fill();
-        clockCtx.strokeStyle='rgba(45,226,230,0.3)';clockCtx.lineWidth=1;clockCtx.stroke();
+        clockCtx.fillStyle='rgba(2,2,18,0.85)';clockCtx.fill();
 
-        // Aurora shimmer ring
-        const shimmer=Date.now()/2000;
-        for(let i=0;i<12;i++){
-            const angle=(i/12)*Math.PI*2-Math.PI/2;
-            const bright=Math.sin(shimmer+i*0.5)*0.3+0.7;
+        // Animated aurora ring
+        const t=Date.now()/1000;
+        for(let i=0;i<24;i++){
+            const angle=(i/24)*Math.PI*2-Math.PI/2;
+            const bright=Math.sin(t*0.8+i*0.4)*0.3+0.7;
+            const hue=((i/24)+t*0.03)%1;
+            let r2,g,b;
+            if(hue<0.33){r2=0;g=1-hue*3;b=hue*3;}
+            else if(hue<0.66){r2=(hue-0.33)*3;g=0;b=1-(hue-0.33)*3;}
+            else{r2=1-(hue-0.66)*3;g=(hue-0.66)*3;b=0;}
             clockCtx.beginPath();
-            clockCtx.arc(cx+Math.cos(angle)*34,cy+Math.sin(angle)*34,1.5,0,Math.PI*2);
-            const hue=currentTheme==='day'?'168,193,232':currentTheme==='evening'?'20,167,108':'0,255,135';
-            clockCtx.fillStyle=`rgba(${hue},${bright})`;
+            clockCtx.arc(cx+Math.cos(angle)*35,cy+Math.sin(angle)*35,2,0,Math.PI*2);
+            clockCtx.fillStyle=`rgba(${Math.floor((r2*0.3+0.1)*255)},${Math.floor((g*0.8+0.2)*255)},${Math.floor((b*0.7+0.3)*255)},${bright})`;
+            clockCtx.shadowBlur=4;clockCtx.shadowColor=clockCtx.fillStyle;
             clockCtx.fill();
         }
+        clockCtx.shadowBlur=0;
+
+        // Border
+        clockCtx.beginPath();clockCtx.arc(cx,cy,r,0,Math.PI*2);
+        clockCtx.strokeStyle='rgba(45,226,230,0.2)';clockCtx.lineWidth=1;clockCtx.stroke();
 
         const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds();
         const hAngle=(Math.PI/6)*h+(Math.PI/360)*m-Math.PI/2;
         const mAngle=(Math.PI/30)*m+(Math.PI/1800)*s-Math.PI/2;
         const sAngle=(Math.PI/30)*s-Math.PI/2;
 
+        clockCtx.lineCap='round';
+        clockCtx.shadowBlur=8;clockCtx.shadowColor='rgba(45,226,230,0.5)';
         // Hour
         clockCtx.beginPath();
         clockCtx.moveTo(cx+Math.cos(hAngle)*4,cy+Math.sin(hAngle)*4);
         clockCtx.lineTo(cx+Math.cos(hAngle)*20,cy+Math.sin(hAngle)*20);
-        clockCtx.strokeStyle='#e8f4f8';clockCtx.lineWidth=3;clockCtx.lineCap='round';
-        clockCtx.shadowBlur=6;clockCtx.shadowColor='rgba(45,226,230,0.5)';
-        clockCtx.stroke();
+        clockCtx.strokeStyle='#e8f4f8';clockCtx.lineWidth=3;clockCtx.stroke();
         // Minute
         clockCtx.beginPath();
         clockCtx.moveTo(cx+Math.cos(mAngle)*4,cy+Math.sin(mAngle)*4);
         clockCtx.lineTo(cx+Math.cos(mAngle)*30,cy+Math.sin(mAngle)*30);
         clockCtx.strokeStyle='#a8d8ea';clockCtx.lineWidth=2;clockCtx.stroke();
         clockCtx.shadowBlur=0;
-        // Second
+        // Second — aurora colored
+        const sHue=((s/60)+t*0.05)%1;
+        const sColor=sHue<0.5?`rgba(0,${Math.floor(255-sHue*510)},${Math.floor(sHue*510)},0.8)`
+                              :`rgba(${Math.floor((sHue-0.5)*510)},0,${Math.floor(255-(sHue-0.5)*510)},0.8)`;
         clockCtx.beginPath();
         clockCtx.moveTo(cx+Math.cos(sAngle)*(-6),cy+Math.sin(sAngle)*(-6));
         clockCtx.lineTo(cx+Math.cos(sAngle)*34,cy+Math.sin(sAngle)*34);
-        clockCtx.strokeStyle='rgba(0,255,135,0.7)';clockCtx.lineWidth=0.8;clockCtx.stroke();
+        clockCtx.strokeStyle=sColor;clockCtx.lineWidth=0.8;clockCtx.stroke();
         // Center
-        clockCtx.beginPath();clockCtx.arc(cx,cy,3,0,Math.PI*2);
-        clockCtx.fillStyle='#2de2e6';clockCtx.fill();
+        clockCtx.beginPath();clockCtx.arc(cx,cy,3.5,0,Math.PI*2);
+        clockCtx.fillStyle='#2de2e6';clockCtx.shadowBlur=6;clockCtx.shadowColor='#2de2e6';
+        clockCtx.fill();clockCtx.shadowBlur=0;
     }
     drawClock();setInterval(drawClock,1000);
 
@@ -280,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
     updateTheme();animate();setInterval(updateTheme,60000);
 
-    // Z-index stacking
     const stackStyle=document.createElement('style');
     stackStyle.textContent='#app,#app>*,.navbar,header{position:relative;z-index:10!important;}';
     document.head.appendChild(stackStyle);
