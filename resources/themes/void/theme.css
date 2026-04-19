@@ -73,7 +73,7 @@ div.item:hover .title { color: rgba(176,173,168,0.75) !important; }
 div.item:hover a, div.item:hover .description, div.item:hover * {
     color: rgba(176,173,168,0.4) !important;
 }
-div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
+div.item::after, div.item::before {
     display: none !important;
 }
 .app-icon img {

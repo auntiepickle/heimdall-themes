@@ -50,7 +50,7 @@ div.item a, div.item .description, div.item * {
     color: var(--text-soft, #b09870) !important;
     font-family: 'Cormorant Garamond', Georgia, serif !important;
 }
-div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
+div.item::after, div.item::before {
     display: none !important;
 }
 .app-icon img {

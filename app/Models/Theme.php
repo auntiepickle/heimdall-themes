@@ -7,6 +7,7 @@ class Theme {
     public string $slug, $name, $description, $author;
     public ?string $preview;
     public array $variants, $autoSchedule, $backgrounds;
+    public bool $alpha;
     public string $path;
 
     public function __construct(array $d, string $path) {
@@ -14,6 +15,7 @@ class Theme {
         $this->description=$d["description"]??""; $this->author=$d["author"]??"";
         $this->preview=$d["preview"]??null; $this->variants=$d["variants"]??["default"];
         $this->autoSchedule=$d["auto_schedule"]??[]; $this->backgrounds=$d["backgrounds"]??[];
+        $this->alpha=($d["alpha"]??false)===true;
         $this->path=$path;
     }
 
