@@ -96,6 +96,9 @@ div.item a, div.item .description, div.item * {
     font-family: 'JetBrains Mono', monospace !important;
     text-shadow: 0 0 2px var(--phosphor-glow, rgba(0,255,65,0.2));
 }
+div.item [class*="tag"], div.item [class*="badge"] {
+    display: none !important;
+}
 .app-icon img {
     border-radius: 0;
     max-height: 44px;

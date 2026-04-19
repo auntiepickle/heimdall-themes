@@ -39,12 +39,6 @@
         </style>
     {{-- THEME GLOBAL FIXES --}}
     <style>
-    .item .link {
-        width: auto !important;
-        left: auto !important;
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-    }
     .message-container {
         position: relative;
         z-index: 25 !important;
