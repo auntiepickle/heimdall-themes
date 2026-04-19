@@ -65,41 +65,53 @@
     }
     </style>
     <script>window.__HEIMDALL_MOBILE__=/Mobi|Android/i.test(navigator.userAgent)||window.innerWidth<768;</script>
-    {{-- GYRO → MOUSE on mobile: tilt the device to drive parallax/shader effects --}}
+    {{-- MOBILE INPUT → MOUSE: gyro (Android, iOS w/HTTPS+permission) and touch drag (universal fallback) --}}
     <script>
     (function(){
         if(!window.__HEIMDALL_MOBILE__) return;
-        if(typeof DeviceOrientationEvent==='undefined') return;
         var cx=window.innerWidth/2,cy=window.innerHeight/2,tx=cx,ty=cy,active=false;
         var GAIN_X=window.innerWidth*0.012,GAIN_Y=window.innerHeight*0.014;
-        var calibBeta=null,calibGamma=null;
-        function onOrient(e){
-            if(e.gamma==null||e.beta==null) return;
-            if(calibBeta===null){calibBeta=e.beta;calibGamma=e.gamma;}
-            tx=cx+(e.gamma-calibGamma)*GAIN_X;
-            ty=cy+(e.beta-calibBeta)*GAIN_Y;
-            tx=Math.max(0,Math.min(window.innerWidth,tx));
-            ty=Math.max(0,Math.min(window.innerHeight,ty));
-            active=true;
-        }
         window.addEventListener('resize',function(){
             cx=window.innerWidth/2;cy=window.innerHeight/2;
             GAIN_X=window.innerWidth*0.012;GAIN_Y=window.innerHeight*0.014;
         });
-        function start(){window.addEventListener('deviceorientation',onOrient);}
-        if(typeof DeviceOrientationEvent.requestPermission==='function'){
-            // iOS 13+: needs a tap to grant. Request on first touch.
-            var once=function(){
-                document.removeEventListener('touchstart',once);
-                DeviceOrientationEvent.requestPermission().then(function(r){
-                    if(r==='granted') start();
-                }).catch(function(){});
-            };
-            document.addEventListener('touchstart',once,{once:true});
-        }else{
-            start();
+
+        // Touch drag — universal, works without permissions or HTTPS
+        function onTouch(e){
+            if(!e.touches||!e.touches.length) return;
+            tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+            active=true;
         }
-        // Smoothed dispatch — synthetic mousemove, isTrusted=false so themes can opt out if needed.
+        document.addEventListener('touchstart',onTouch,{passive:true});
+        document.addEventListener('touchmove',onTouch,{passive:true});
+
+        // Gyro — passive ambient input when available
+        if(typeof DeviceOrientationEvent!=='undefined'){
+            var calibBeta=null,calibGamma=null;
+            function onOrient(e){
+                if(e.gamma==null||e.beta==null) return;
+                if(calibBeta===null){calibBeta=e.beta;calibGamma=e.gamma;}
+                tx=cx+(e.gamma-calibGamma)*GAIN_X;
+                ty=cy+(e.beta-calibBeta)*GAIN_Y;
+                tx=Math.max(0,Math.min(window.innerWidth,tx));
+                ty=Math.max(0,Math.min(window.innerHeight,ty));
+                active=true;
+            }
+            function startGyro(){window.addEventListener('deviceorientation',onOrient);}
+            if(typeof DeviceOrientationEvent.requestPermission==='function'){
+                // iOS 13+ needs a tap to grant. Request on first touch.
+                var once=function(){
+                    DeviceOrientationEvent.requestPermission().then(function(r){
+                        if(r==='granted') startGyro();
+                    }).catch(function(){});
+                };
+                document.addEventListener('touchstart',once,{once:true});
+            }else{
+                startGyro();
+            }
+        }
+
+        // Smoothed dispatch — synthetic mousemove (isTrusted=false; themes can opt out if needed)
         var sx=cx,sy=cy;
         (function tick(){
             if(active){
