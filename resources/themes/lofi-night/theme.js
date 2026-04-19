@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dims effects when user is actively interacting, ramps back on idle.
     let lastActivity = 0;
     const IDLE_THRESHOLD = 4000;
-    const ACTIVE_INTENSITY = 0.12;  // barely there when clicking around
-    const IDLE_INTENSITY = 0.55;    // never goes full blast — subtle CRT warmth
-    const RAMP_BACK_SPEED = 0.001;  // very slow ease back
-    let activityDim = 0.55;
+    const ACTIVE_INTENSITY = 0.45;  // dimmed but clearly visible while interacting
+    const IDLE_INTENSITY = 0.90;    // near-full when idle
+    const RAMP_BACK_SPEED = 0.002;  // ease back a bit faster
+    let activityDim = 0.90;
 
     function onActivity() { lastActivity = Date.now(); }
     document.addEventListener('mousemove', onActivity);
@@ -155,20 +155,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateShaderTheme(theme) {
         if (theme === 'night') {
-            atmoCanvas.dataset.baseOpacity   = '0.30';
+            atmoCanvas.dataset.baseOpacity   = '0.55';
             atmoCanvas.style.mixBlendMode    = 'screen';
-            glitchCanvas.dataset.baseOpacity = '0.38';
+            glitchCanvas.dataset.baseOpacity = '0.65';
             glitchCanvas.style.mixBlendMode  = 'overlay';
         } else if (theme === 'evening') {
-            atmoCanvas.dataset.baseOpacity   = '0.28';
+            atmoCanvas.dataset.baseOpacity   = '0.50';
             atmoCanvas.style.mixBlendMode    = 'overlay';
-            glitchCanvas.dataset.baseOpacity = '0.34';
-            glitchCanvas.style.mixBlendMode  = 'soft-light';
+            glitchCanvas.dataset.baseOpacity = '0.58';
+            glitchCanvas.style.mixBlendMode  = 'overlay';
         } else {
-            atmoCanvas.dataset.baseOpacity   = '0.25';
+            atmoCanvas.dataset.baseOpacity   = '0.45';
             atmoCanvas.style.mixBlendMode    = 'overlay';
-            glitchCanvas.dataset.baseOpacity = '0.30';
-            glitchCanvas.style.mixBlendMode  = 'soft-light';
+            glitchCanvas.dataset.baseOpacity = '0.52';
+            glitchCanvas.style.mixBlendMode  = 'overlay';
         }
     }
 
