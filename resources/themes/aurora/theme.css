@@ -46,7 +46,7 @@ div.item a, div.item .description, div.item * {
     color: #a8d8ea !important;
     text-shadow: 0 0 8px rgba(45,226,230,0.15);
 }
-div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
+div.item::after, div.item::before {
     display: none !important;
 }
 .app-icon img { border-radius: 12px; max-height: 55px; }
