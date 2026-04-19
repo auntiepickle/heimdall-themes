@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('scroll', onActivity, true);
 
     function getActivityMultiplier() {
+        if (isMobile) return IDLE_INTENSITY;
         const idle = Date.now() - lastActivity;
         if (idle < IDLE_THRESHOLD) {
             activityDim = Math.max(activityDim - 0.04, ACTIVE_INTENSITY);
