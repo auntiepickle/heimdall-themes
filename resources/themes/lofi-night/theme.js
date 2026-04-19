@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(vignetteStyle);
 
     // ====================== PARALLAX ======================
-    const PARALLAX_AMOUNT = 60, PARALLAX_EASE = 0.05;
+    const PARALLAX_AMOUNT = 60, PARALLAX_EASE = 0.15;
     const parallaxStyle = document.createElement('style');
     parallaxStyle.textContent = `
         @keyframes kenBurns {
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const kbX  = Math.sin(kbT * 0.013) * 10;
         const kbY  = Math.cos(kbT * 0.009) * 7;
         parallaxBg.style.transform =
-            `translate(${currentX + kbX}px, ${currentY + kbY}px) scale(${kbScale.toFixed(4)})`;
+            `translate3d(${currentX + kbX}px, ${currentY + kbY}px, 0) scale(${kbScale})`;
         requestAnimationFrame(tickParallax);
     })();
 

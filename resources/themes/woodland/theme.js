@@ -31,11 +31,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             float fbm(vec2 p){float v=0.,a=0.5;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.1;a*=0.5;}return v;}
 
-            // Tree silhouette shape
+            // Tree silhouette — trunk with branching canopy
             float treeSil(vec2 p, float seed){
-                float trunk=smoothstep(0.015,0.,abs(p.x))*smoothstep(0.,0.15,p.y);
-                float canopy=smoothstep(0.12+fbm(p*8.+seed)*0.06,0.,length(p-vec2(0.,0.18)));
-                return max(trunk,canopy);
+                float trunk=smoothstep(0.018,0.,abs(p.x))*smoothstep(0.,0.18,p.y);
+                // Branches splaying out
+                float br=0.;
+                for(int b=0;b<3;b++){
+                    float fb=float(b);
+                    float ang=(hash(vec2(seed+fb,fb*2.3))-0.5)*1.4;
+                    vec2 bp=p-vec2(0.,0.05+fb*0.04);
+                    bp=mat2(cos(ang),-sin(ang),sin(ang),cos(ang))*bp;
+                    br+=smoothstep(0.008,0.,abs(bp.x))*smoothstep(0.,0.10,bp.y)*0.6;
+                }
+                // Lumpy canopy with multiple lobes
+                float canopy=0.;
+                for(int c=0;c<3;c++){
+                    float fc=float(c);
+                    vec2 cp=p-vec2((hash(vec2(seed+fc,fc*1.7))-0.5)*0.08,0.16+fc*0.02);
+                    float r=0.10+noise(cp*9.+seed+fc)*0.05;
+                    canopy=max(canopy,smoothstep(r,0.,length(cp)));
+                }
+                return max(max(trunk,br),canopy);
+            }
+
+            // Fern frond — multiple leaflets along a stem
+            float fernSil(vec2 p, float seed){
+                float stem=smoothstep(0.004,0.,abs(p.x))*smoothstep(0.,0.12,p.y);
+                float leaves=0.;
+                for(int i=0;i<5;i++){
+                    float fi=float(i);
+                    float py=p.y-fi*0.024;
+                    float side=mod(fi,2.)<0.5?1.:-1.;
+                    float ax=abs(p.x-side*py*0.6);
+                    leaves+=smoothstep(0.012-fi*0.0015,0.,ax)*smoothstep(0.,0.022,py)*smoothstep(0.10,0.025,py);
+                }
+                return max(stem,leaves);
+            }
+
+            // Foreground branch — thick limb with overhanging leaves
+            float fgBranch(vec2 p, float seed, float rotAng){
+                vec2 q=mat2(cos(rotAng),-sin(rotAng),sin(rotAng),cos(rotAng))*p;
+                float limb=smoothstep(0.025,0.,abs(q.y))*smoothstep(0.,0.6,q.x);
+                // Cluster of leaves along the limb
+                float cluster=0.;
+                for(int i=0;i<5;i++){
+                    float fi=float(i);
+                    vec2 lp=q-vec2(0.08+fi*0.10,sin(seed+fi*2.1)*0.04);
+                    float r=0.07+noise(lp*7.+seed+fi)*0.04;
+                    cluster=max(cluster,smoothstep(r,0.,length(lp)));
+                }
+                return max(limb,cluster);
             }
 
             void main(){
@@ -76,19 +121,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 vec3 moss=vec3(0.12,0.22,0.08)*ground;
                 moss+=vec3(0.08,0.15,0.05)*fbm(uv*6.+1.)*ground;
 
-                // Tree silhouettes — layered at different depths
+                // Tree silhouettes — layered at different depths, denser
                 float trees=0.;
-                for(int i=0;i<6;i++){
+                for(int i=0;i<10;i++){
                     float fi=float(i);
                     float tx=hash(vec2(fi*5.7,fi*3.2))*1.4-0.2;
-                    float depth=0.3+fi*0.1;
+                    float depth=0.25+fi*0.08;
                     float sway=sin(t*0.01+fi*1.5)*0.003*depth;
                     vec2 tp=vec2(uv.x-tx+sway,1.-uv.y);
-                    float scale=0.6+fi*0.15;
+                    float scale=0.55+hash(vec2(fi*2.1,fi*1.3))*0.35;
                     float tree=treeSil(tp*vec2(1./scale,1./scale),fi*7.);
                     trees+=tree*depth*canopyDark;
                 }
-                trees=min(trees,0.5);
+                trees=min(trees,0.6);
+
+                // Ground undergrowth — fern fronds along the bottom edge
+                float ferns=0.;
+                for(int i=0;i<14;i++){
+                    float fi=float(i);
+                    float fx=hash(vec2(fi*4.3,fi*2.8))*1.1-0.05;
+                    float fy=0.85+hash(vec2(fi*7.7,fi*1.1))*0.13;
+                    float fsway=sin(t*0.012+fi*1.7)*0.004;
+                    vec2 fp=vec2(uv.x-fx+fsway,fy-uv.y);
+                    float fscale=0.6+hash(vec2(fi*3.1,fi*5.3))*0.5;
+                    ferns+=fernSil(fp*vec2(1./fscale,1./fscale),fi*3.7)*0.5;
+                }
+                ferns=min(ferns,0.7);
+
+                // Foreground branches — frame the viewport from upper corners
+                float fgL=fgBranch(vec2(uv.x+0.05,uv.y+0.02),1.7,-0.35+sin(t*0.008)*0.012);
+                float fgR=fgBranch(vec2(-uv.x+1.05,uv.y+0.05),3.4,-0.5+sin(t*0.009+1.3)*0.015);
+                float fg=max(fgL,fgR);
+
+                // Dust motes drifting through light columns
+                float motes=0.;
+                for(int i=0;i<8;i++){
+                    float fi=float(i);
+                    vec2 mp=vec2(0.15+fi*0.11+sin(t*0.05+fi*1.7)*0.015,
+                                 fract(hash(vec2(fi*9.1,fi*2.7))+t*0.04*(0.5+fi*0.05)));
+                    float md=length((uv-mp)*vec2(2.,1.));
+                    motes+=smoothstep(0.008,0.,md)*0.18;
+                }
 
                 // Canopy shadow — dark patches from above
                 float canopy=fbm(vec2(uv.x*3.+t*0.001,uv.y*1.5))*canopyDark;
@@ -140,8 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Compose
                 vec3 color=sky+fogAll+moss+rayCol*rays+warmCol*warmth+pinkCol;
+                color+=rayCol*motes*0.7;
                 color-=vec3(trees)*0.5;
                 color-=vec3(canopy)*0.3;
+                color-=vec3(ferns)*0.45;
+                color-=vec3(fg)*0.85;
                 if(u_theme>1.5) color+=vec3(0.45,0.75,0.25)*fireflies;
                 // Organic 8mm grain -- earthy warm, chunky
                 float tf=floor(u_time*20.);float bl=fract(u_time*20.);bl=bl*bl*(3.-2.*bl);
