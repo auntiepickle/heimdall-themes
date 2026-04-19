@@ -428,27 +428,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ====================== FILM GRAIN OVERLAY (always visible, skip on mobile) ======================
     if(!isMobile){
+    const GRAIN_DIVISOR=3;
     const grainCanvas = document.createElement('canvas');
-    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:overlay;opacity:0.55;';
+    grainCanvas.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:overlay;opacity:0.55;image-rendering:auto;';
     document.body.appendChild(grainCanvas);
     const grainCtx = grainCanvas.getContext('2d');
-    let grainW=0,grainH=0,grainFrame=0;
+    let grainW=0,grainH=0,grainFrame=0,grainImg=null;
     function animateGrain(){
-        if(grainCanvas.width!==window.innerWidth||grainCanvas.height!==window.innerHeight){
-            grainCanvas.width=window.innerWidth;grainCanvas.height=window.innerHeight;
-            grainW=grainCanvas.width;grainH=grainCanvas.height;
+        const tw=Math.ceil(window.innerWidth/GRAIN_DIVISOR);
+        const th=Math.ceil(window.innerHeight/GRAIN_DIVISOR);
+        if(grainCanvas.width!==tw||grainCanvas.height!==th){
+            grainCanvas.width=tw;grainCanvas.height=th;
+            grainW=tw;grainH=th;
+            grainImg=grainCtx.createImageData(grainW,grainH);
         }
         grainFrame++;
-        if(grainFrame%2!==0){requestAnimationFrame(animateGrain);return;}
-        const imgData=grainCtx.createImageData(grainW,grainH);
-        const d=imgData.data;
+        if(grainFrame%3!==0){requestAnimationFrame(animateGrain);return;}
+        const d=grainImg.data;
         for(let i=0;i<d.length;i+=4){
             const fine=(Math.random()-0.5)*2;
             const g=fine*50;
             d[i]=128+g*1.12;d[i+1]=128+g*1.04;d[i+2]=128+g*0.88;
-            d[i+3]=16+Math.floor(Math.random()*12);
+            d[i+3]=16+(Math.random()*12)|0;
         }
-        grainCtx.putImageData(imgData,0,0);
+        grainCtx.putImageData(grainImg,0,0);
         requestAnimationFrame(animateGrain);
     }
     animateGrain();
