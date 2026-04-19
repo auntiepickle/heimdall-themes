@@ -54,7 +54,7 @@ input, textarea {
     color: #166534 !important;
     border-radius: 20px;
 }
-div.item::after, div.item::before {
+div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
     display: none !important;
 }
 .app-icon img { border-radius: 24px; max-height: 60px; }

@@ -44,7 +44,7 @@ div.item .title {
 div.item a, div.item .description, div.item * {
     color: var(--text-soft, #4a6548) !important;
 }
-div.item::after, div.item::before {
+div.item::after, div.item::before, div.item [class*="tag"], div.item [class*="badge"] {
     display: none !important;
 }
 .app-icon img { border-radius: 16px; max-height: 55px; }
